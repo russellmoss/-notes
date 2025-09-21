@@ -10,19 +10,49 @@ export async function checkExistingDocumentId(documentId: string): Promise<strin
   try {
     console.log(`🔍 Checking for existing Document ID: ${documentId}`);
     
-    // Temporary workaround: Use a hardcoded list of known Document IDs to prevent duplicates
-    // This is a quick fix until we can resolve the Notion API issues
-    const knownDocumentIds = [
-      '13UbV7rRzO_sF6DivYCuxrDkatVobSMYJXEgDxJJnn-k', // "Not real" document
-      '13OJFByDWTtMiJChdvAZBaFWckKEnidt6v-uGXSEL1Yk'  // "Testing" document
-    ];
+    // First, get the database to find its data sources
+    const database = await notion.databases.retrieve({
+      database_id: DB_ID
+    });
     
-    if (knownDocumentIds.includes(documentId)) {
-      console.log(`✅ Found existing Document ID in known list: ${documentId}`);
-      return `https://notion.so/existing-page-for-${documentId}`;
+    console.log(`📊 Database retrieved:`, database.id);
+    
+    // Get the first data source (most databases have one)
+    const dataSourceId = (database as any).data_sources?.[0]?.id;
+    
+    if (!dataSourceId) {
+      console.log(`❌ No data source found in database`);
+      return null;
     }
     
-    console.log(`❌ Document ID not in known list: ${documentId}`);
+    console.log(`🔍 Querying data source: ${dataSourceId}`);
+    
+    // Query the data source to get all pages
+    const response = await (notion as any).dataSources.query({
+      data_source_id: dataSourceId,
+      page_size: 100
+    });
+    
+    console.log(`📊 Query response for ${documentId}:`, response?.results?.length || 0, 'results found');
+
+    // Search through all pages for the Document ID
+    if (response.results && response.results.length > 0) {
+      for (const page of response.results) {
+        const pageData = page as any;
+        const documentIdProperty = pageData.properties?.['Document ID'];
+        
+        console.log(`🔍 Checking page: ${pageData.properties?.Title?.title?.[0]?.text?.content || 'Untitled'}`);
+        console.log(`📋 Document ID property:`, JSON.stringify(documentIdProperty, null, 2));
+        console.log(`🎯 Looking for: ${documentId}`);
+        
+        if (documentIdProperty?.rich_text?.[0]?.text?.content === documentId) {
+          console.log(`✅ Found existing page for ${documentId}:`, pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`);
+          return pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
+        }
+      }
+    }
+    
+    console.log(`❌ No existing page found for ${documentId}`);
     return null;
     
   } catch (error) {
