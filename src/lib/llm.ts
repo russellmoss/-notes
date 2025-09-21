@@ -20,14 +20,15 @@ export async function summarizeSingleSource(input: {
 - title: concise, <= 90 chars.
 - date_iso: prefer explicit date; else use provided default_date_iso.
 - type: one of ["Meeting","Idea","Learning","Other"].
-- people: detect names.
-- tldr: 1–2 sentences.
-- summary: 3–6 short paragraphs or bullet-like lines.
+- people: detect names as array of strings.
+- tldr: 1–2 sentences as a single string.
+- summary: 3–6 short paragraphs as a single string (not an array).
 - action_items: conservative [{owner, task, due|null}].
-- key_takeaways: brief bullets.
-- full_text.body: include the main text provided.
-- If transcript_raw is present (Otter), produce a compressed 'transcript_summary' and include it in full_text.transcript_summary.
-- source is provided and must be preserved as-is.`;
+- key_takeaways: brief bullets as array of strings.
+- full_text.body: include the main text provided as a single string.
+- If transcript_raw is present (Otter), produce a compressed 'transcript_summary' and include it in full_text.transcript_summary as a single string.
+- source is provided and must be preserved as-is.
+- CRITICAL: summary and tldr must be strings, not arrays.`;
 
   const user = JSON.stringify({
     default_date_iso: defaultDate,
