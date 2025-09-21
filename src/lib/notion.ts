@@ -1,0 +1,66 @@
+// src/lib/notion.ts
+import { Client } from "@notionhq/client";
+import { TNoteJSON } from "./schema";
+
+const notion = new Client({ auth: process.env.NOTION_TOKEN! });
+const DB_ID = process.env.NOTION_DB_ID!;
+
+export async function createNotePage(note: TNoteJSON) {
+  const props: any = {
+    Title: { title: [{ type: "text", text: { content: note.title } }] },
+    Date: { date: { start: note.date_iso } },
+    Type: { select: { name: note.type } },
+    People: { multi_select: note.people.map(p => ({ name: p })) },
+    Source: { select: { name: note.source } },
+    TLDR: { rich_text: [{ type: "text", text: { content: note.tldr } }] },
+    Summary: { rich_text: [{ type: "text", text: { content: note.summary } }] },
+    "Action Items": { rich_text: [{ type: "text", text: {
+      content: note.action_items.map(ai =>
+        `• ${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`
+      ).join("\n") || "-"
+    }}]},
+    "Due Dates": { rich_text: [{ type: "text", text: {
+      content: note.action_items.filter(ai => ai.due).map(ai =>
+        `• ${ai.owner}: ${ai.task} — ${ai.due}`
+      ).join("\n") || "-"
+    }}]},
+    "LLM JSON": { rich_text: [{ type: "text", text: { content: JSON.stringify(note) } }] },
+  };
+
+  const blocks = [
+    h2("TL;DR"), para(note.tldr),
+    h2("Key Takeaways"), bullets(note.key_takeaways),
+    h2("Action Items"), bullets(note.action_items.map(ai =>
+      `${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`)),
+    h2("Body"), para(note.full_text.body || "-"),
+  ];
+
+  if (note.full_text.transcript_summary) {
+    blocks.push(h2("Transcript Summary"), para(note.full_text.transcript_summary));
+  }
+
+  const page = await notion.pages.create({
+    parent: { database_id: DB_ID },
+    properties: props,
+    children: blocks
+  });
+
+  return { pageId: page.id, url: (page as any).url };
+}
+
+const h2 = (text: string) => ({
+  object: "block",
+  type: "heading_2",
+  heading_2: { rich_text: [{ type: "text", text: { content: text } }] }
+});
+const para = (text: string) => ({
+  object: "block",
+  type: "paragraph",
+  paragraph: { rich_text: [{ type: "text", text: { content: text } }] }
+});
+const bullets = (items: string[]) =>
+  items.length ? items.map(i => ({
+    object: "block",
+    type: "bulleted_list_item",
+    bulleted_list_item: { rich_text: [{ type: "text", text: { content: i } }] }
+  })) : [para("-")];
