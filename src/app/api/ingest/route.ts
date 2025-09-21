@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
     source: data.source
   });
 
-  const created = await createNotePage(note);
+  const created = await createNotePage(note, data.document_id);
   return NextResponse.json({ ok: true, ...created });
 }

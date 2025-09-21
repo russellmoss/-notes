@@ -5,7 +5,33 @@ import { TNoteJSON } from "./schema";
 const notion = new Client({ auth: process.env.NOTION_TOKEN! });
 const DB_ID = process.env.NOTION_DB_ID!;
 
-export async function createNotePage(note: TNoteJSON) {
+// Check if a Notion page already exists with the given Google Drive Document ID
+export async function checkExistingDocumentId(documentId: string): Promise<string | null> {
+  try {
+    const response = await notion.databases.query({
+      database_id: DB_ID,
+      filter: {
+        property: 'Document ID',
+        rich_text: {
+          equals: documentId
+        }
+      },
+      page_size: 1
+    });
+
+    if (response.results.length > 0) {
+      const page = response.results[0] as any;
+      return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error checking existing Document ID:', error);
+    return null; // If we can't check, proceed anyway
+  }
+}
+
+export async function createNotePage(note: TNoteJSON, documentId?: string) {
   const props: any = {
     Title: { title: [{ type: "text", text: { content: note.title } }] },
     Date: { date: { start: note.date_iso } },
@@ -36,6 +62,11 @@ export async function createNotePage(note: TNoteJSON) {
       processedAt: new Date().toISOString()
     }, null, 2) } }] },
   };
+
+  // Add Document ID if provided
+  if (documentId) {
+    props["Document ID"] = { rich_text: [{ type: "text", text: { content: documentId } }] };
+  }
 
   const blocks: any[] = [
     h2("TL;DR"), 

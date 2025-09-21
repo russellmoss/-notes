@@ -35,6 +35,7 @@ export const IngestBody = z.object({
     transcript_raw: z.string().optional(), // optional raw transcript (Otter)
   }),
   source: z.enum(["Otter","MyScript","Manual"]),
+  document_id: z.string().optional(), // Google Drive Document ID for deduplication
   signature: z.string().optional()
 });
 export type TIngestBody = z.infer<typeof IngestBody>;
