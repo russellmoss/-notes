@@ -18,9 +18,15 @@ const FOLDERS: FolderConfig[] = [
 ];
 
 export async function POST(req: NextRequest) {
-  // Optional: Add authentication
+  // Check authentication via header or query parameter
   const authHeader = req.headers.get('Authorization');
-  if (authHeader !== `Bearer ${process.env.SYNC_API_KEY}`) {
+  const url = new URL(req.url);
+  const apiKey = url.searchParams.get('api_key');
+  
+  const isValidAuth = authHeader === `Bearer ${process.env.SYNC_API_KEY}` || 
+                     apiKey === process.env.SYNC_API_KEY;
+  
+  if (!isValidAuth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
