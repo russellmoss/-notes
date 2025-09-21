@@ -101,7 +101,7 @@ export async function getDocumentText(documentId: string) {
 
   if (doc.data.body?.content) {
     text = doc.data.body.content
-      .map(element => extractText(element))
+      .map((element: any) => extractText(element))
       .join('')
       .trim();
   }

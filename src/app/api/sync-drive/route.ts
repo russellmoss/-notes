@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ 
         error: 'Google credentials not configured',
         hasCredentials: !!process.env.GOOGLE_CREDENTIALS,
-        envVars: Object.keys(process.env).filter(key => key.includes('GOOGLE') || key.includes('SYNC') || key.includes('CRON'))
+        envVars: Object.keys(process.env).filter((key: string) => key.includes('GOOGLE') || key.includes('SYNC') || key.includes('CRON'))
       }, { status: 500 });
     }
     
@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
     // Process new documents
     const results = await processNewDocuments(FOLDERS);
     
-    const processed = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    const processed = results.filter((r: any) => r.success).length;
+    const failed = results.filter((r: any) => !r.success).length;
 
     return NextResponse.json({
       message: `Sync complete: ${processed} processed, ${failed} failed`,

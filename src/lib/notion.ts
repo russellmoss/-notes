@@ -10,17 +10,17 @@ export async function createNotePage(note: TNoteJSON) {
     Title: { title: [{ type: "text", text: { content: note.title } }] },
     Date: { date: { start: note.date_iso } },
     Type: { select: { name: note.type } },
-    People: { multi_select: note.people.map(p => ({ name: p })) },
+    People: { multi_select: note.people.map((p: any) => ({ name: p })) },
     Source: { select: { name: note.source } },
     TLDR: { rich_text: [{ type: "text", text: { content: note.tldr } }] },
     Summary: { rich_text: [{ type: "text", text: { content: note.summary } }] },
     "Action Items": { rich_text: [{ type: "text", text: {
-      content: note.action_items.map(ai =>
+      content: note.action_items.map((ai: any) =>
         `• ${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`
       ).join("\n") || "-"
     }}]},
     "Due Dates": { rich_text: [{ type: "text", text: {
-      content: note.action_items.filter(ai => ai.due).map(ai =>
+      content: note.action_items.filter((ai: any) => ai.due).map((ai: any) =>
         `• ${ai.owner}: ${ai.task} — ${ai.due}`
       ).join("\n") || "-"
     }}]},

@@ -81,8 +81,8 @@ export async function POST(req: NextRequest) {
     // Process new documents
     const results = await processNewDocuments(FOLDERS);
     
-    const processed = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    const processed = results.filter((r: any) => r.success).length;
+    const failed = results.filter((r: any) => !r.success).length;
 
     return NextResponse.json({
       message: `Sync complete: ${processed} processed, ${failed} failed`,
