@@ -20,7 +20,7 @@ export const NoteJSON = z.object({
   full_text: z.object({
     body: z.string().optional(),               // primary text for this entry
     transcript_summary: z.string().optional(), // likely present if source=Otter
-  }),
+  }).optional(),
   content_hash: z.string().min(16),
 });
 export type TNoteJSON = z.infer<typeof NoteJSON>;

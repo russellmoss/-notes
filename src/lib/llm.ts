@@ -51,6 +51,22 @@ export async function summarizeSingleSource(input: {
   const raw = resp.choices[0].message?.content || "{}";
   const json = JSON.parse(raw);
 
+  // Fix common LLM response issues
+  if (Array.isArray(json.summary)) {
+    json.summary = json.summary.join("\n\n");
+  }
+  if (Array.isArray(json.tldr)) {
+    json.tldr = json.tldr.join(" ");
+  }
+  
+  // Ensure full_text exists and has proper structure
+  if (!json.full_text) {
+    json.full_text = {};
+  }
+  if (json.full_text.transcript_summary === null) {
+    delete json.full_text.transcript_summary;
+  }
+
   json.content_hash = json.content_hash || hash;
   json.source = input.source;
   if (!json.date_iso) json.date_iso = defaultDate;
