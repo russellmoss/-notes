@@ -12,27 +12,35 @@ export async function checkExistingDocumentId(documentId: string): Promise<strin
     
     // Use the correct Notion API method - we need to query the database directly
     // Let's use a type assertion to work around the TypeScript issue
-    // Try a different approach - get all pages and filter manually
-    const response = await (notion as any).databases.query({
-      database_id: DB_ID,
-      page_size: 100  // Get more pages to search through
+    // Use the correct Notion API method - search for pages
+    const response = await notion.pages.search({
+      query: '',
+      filter: {
+        property: 'object',
+        value: 'page'
+      },
+      page_size: 100
     });
 
     console.log(`📊 Query response for ${documentId}:`, response?.results?.length || 0, 'results found');
 
-    // Manually search through all pages for the Document ID
+    // Filter for pages in our database and search for the Document ID
     if (response.results && response.results.length > 0) {
       for (const page of response.results) {
         const pageData = page as any;
-        const documentIdProperty = pageData.properties?.['Document ID'];
         
-        console.log(`🔍 Checking page: ${pageData.properties?.Title?.title?.[0]?.text?.content || 'Untitled'}`);
-        console.log(`📋 Document ID property:`, JSON.stringify(documentIdProperty, null, 2));
-        console.log(`🎯 Looking for: ${documentId}`);
-        
-        if (documentIdProperty?.rich_text?.[0]?.text?.content === documentId) {
-          console.log(`✅ Found existing page for ${documentId}:`, pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`);
-          return pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
+        // Only check pages that are in our database
+        if (pageData.parent?.database_id === DB_ID) {
+          const documentIdProperty = pageData.properties?.['Document ID'];
+          
+          console.log(`🔍 Checking page: ${pageData.properties?.Title?.title?.[0]?.text?.content || 'Untitled'}`);
+          console.log(`📋 Document ID property:`, JSON.stringify(documentIdProperty, null, 2));
+          console.log(`🎯 Looking for: ${documentId}`);
+          
+          if (documentIdProperty?.rich_text?.[0]?.text?.content === documentId) {
+            console.log(`✅ Found existing page for ${documentId}:`, pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`);
+            return pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
+          }
         }
       }
     }
