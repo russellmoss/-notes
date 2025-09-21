@@ -23,11 +23,27 @@ function getAuth() {
   return auth;
 }
 
-export const drive = google.drive({ version: 'v3', auth: getAuth() });
-export const docs = google.docs({ version: 'v1', auth: getAuth() });
+// Lazy-loaded instances to avoid build-time errors
+let _drive: any = null;
+let _docs: any = null;
+
+function getDrive() {
+  if (!_drive) {
+    _drive = google.drive({ version: 'v3', auth: getAuth() });
+  }
+  return _drive;
+}
+
+function getDocs() {
+  if (!_docs) {
+    _docs = google.docs({ version: 'v1', auth: getAuth() });
+  }
+  return _docs;
+}
 
 // Get list of files in a folder
 export async function getFilesInFolder(folderId: string) {
+  const drive = getDrive();
   const response = await drive.files.list({
     q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.document' and trashed=false`,
     fields: 'files(id, name, createdTime, modifiedTime)',
@@ -39,6 +55,7 @@ export async function getFilesInFolder(folderId: string) {
 
 // Get document content as plain text
 export async function getDocumentText(documentId: string) {
+  const docs = getDocs();
   const doc = await docs.documents.get({
     documentId,
   });
@@ -85,6 +102,7 @@ export async function getDocumentText(documentId: string) {
 // Check if we have access to a folder
 export async function verifyFolderAccess(folderId: string) {
   try {
+    const drive = getDrive();
     const response = await drive.files.get({
       fileId: folderId,
       fields: 'id, name, mimeType',
