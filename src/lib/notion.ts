@@ -49,18 +49,15 @@ export async function createNotePage(note: TNoteJSON) {
 }
 
 const h2 = (text: string) => ({
-  object: "block",
-  type: "heading_2",
-  heading_2: { rich_text: [{ type: "text", text: { content: text } }] }
+  type: "heading_2" as const,
+  heading_2: { rich_text: [{ type: "text" as const, text: { content: text } }] }
 });
 const para = (text: string) => ({
-  object: "block",
-  type: "paragraph",
-  paragraph: { rich_text: [{ type: "text", text: { content: text } }] }
+  type: "paragraph" as const,
+  paragraph: { rich_text: [{ type: "text" as const, text: { content: text } }] }
 });
 const bullets = (items: string[]) =>
   items.length ? items.map(i => ({
-    object: "block",
-    type: "bulleted_list_item",
-    bulleted_list_item: { rich_text: [{ type: "text", text: { content: i } }] }
+    type: "bulleted_list_item" as const,
+    bulleted_list_item: { rich_text: [{ type: "text" as const, text: { content: i } }] }
   })) : [para("-")];
