@@ -6,10 +6,24 @@ import fs from 'fs';
 
 // Initialize auth from service account
 function getAuth() {
+  // Check if we have environment variables for production deployment
+  if (process.env.GOOGLE_CREDENTIALS) {
+    const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: [
+        'https://www.googleapis.com/auth/drive.readonly',
+        'https://www.googleapis.com/auth/documents.readonly'
+      ],
+    });
+    return auth;
+  }
+
+  // Fallback to local file for development
   const credentialsPath = path.join(process.cwd(), 'google-credentials.json');
   
   if (!fs.existsSync(credentialsPath)) {
-    throw new Error('Google credentials file not found. Please add google-credentials.json to project root');
+    throw new Error('Google credentials not found. Please set GOOGLE_CREDENTIALS environment variable or add google-credentials.json to project root');
   }
 
   const auth = new google.auth.GoogleAuth({
