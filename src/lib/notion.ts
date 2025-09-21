@@ -27,13 +27,37 @@ export async function createNotePage(note: TNoteJSON) {
     "LLM JSON": { rich_text: [{ type: "text", text: { content: JSON.stringify(note) } }] },
   };
 
-  const blocks = [
-    h2("TL;DR"), para(note.tldr),
-    h2("Key Takeaways"), bullets(note.key_takeaways),
-    h2("Action Items"), bullets(note.action_items.map(ai =>
-      `${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`)),
-    h2("Body"), para(note.full_text.body || "-"),
+  const blocks: any[] = [
+    h2("TL;DR"), 
+    para(note.tldr),
+    h2("Key Takeaways")
   ];
+
+  // Add key takeaways as bullet points
+  if (note.key_takeaways.length > 0) {
+    blocks.push(...note.key_takeaways.map(i => ({
+      type: "bulleted_list_item" as const,
+      bulleted_list_item: { rich_text: [{ type: "text" as const, text: { content: i } }] }
+    })));
+  } else {
+    blocks.push(para("-"));
+  }
+
+  blocks.push(h2("Action Items"));
+  
+  // Add action items as bullet points
+  if (note.action_items.length > 0) {
+    blocks.push(...note.action_items.map(ai => ({
+      type: "bulleted_list_item" as const,
+      bulleted_list_item: { 
+        rich_text: [{ type: "text" as const, text: { content: `${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}` } }] 
+      }
+    })));
+  } else {
+    blocks.push(para("-"));
+  }
+
+  blocks.push(h2("Body"), para(note.full_text.body || "-"));
 
   if (note.full_text.transcript_summary) {
     blocks.push(h2("Transcript Summary"), para(note.full_text.transcript_summary));
@@ -52,12 +76,8 @@ const h2 = (text: string) => ({
   type: "heading_2" as const,
   heading_2: { rich_text: [{ type: "text" as const, text: { content: text } }] }
 });
+
 const para = (text: string) => ({
   type: "paragraph" as const,
   paragraph: { rich_text: [{ type: "text" as const, text: { content: text } }] }
 });
-const bullets = (items: string[]) =>
-  items.length ? items.map(i => ({
-    type: "bulleted_list_item" as const,
-    bulleted_list_item: { rich_text: [{ type: "text" as const, text: { content: i } }] }
-  })) : [para("-")];
