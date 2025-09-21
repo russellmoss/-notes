@@ -8,20 +8,22 @@ const DB_ID = process.env.NOTION_DB_ID!;
 // Check if a Notion page already exists with the given Google Drive Document ID
 export async function checkExistingDocumentId(documentId: string): Promise<string | null> {
   try {
-    const response = await notion.databases.query({
-      database_id: DB_ID,
+    // Use the pages API to search for pages with the Document ID
+    const response = await notion.pages.search({
+      query: documentId,
       filter: {
-        property: 'Document ID',
-        rich_text: {
-          equals: documentId
-        }
+        property: 'object',
+        value: 'page'
       },
       page_size: 1
     });
 
     if (response.results.length > 0) {
       const page = response.results[0] as any;
-      return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
+      // Verify this page is in our database by checking its parent
+      if (page.parent?.database_id === DB_ID) {
+        return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
+      }
     }
     
     return null;
