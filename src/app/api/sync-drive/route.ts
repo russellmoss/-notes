@@ -25,6 +25,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Check if Google credentials are available
+    if (!process.env.GOOGLE_CREDENTIALS) {
+      return NextResponse.json({ 
+        error: 'Google credentials not configured',
+        hasCredentials: !!process.env.GOOGLE_CREDENTIALS
+      }, { status: 500 });
+    }
     // Verify folder access first
     for (const folder of FOLDERS) {
       const access = await verifyFolderAccess(folder.folderId);
@@ -57,5 +64,12 @@ export async function POST(req: NextRequest) {
 
 // Allow manual trigger via GET for testing
 export async function GET(req: NextRequest) {
+  // Check if Google credentials are available
+  if (!process.env.GOOGLE_CREDENTIALS) {
+    return NextResponse.json({ 
+      error: 'Google credentials not configured',
+      hasCredentials: !!process.env.GOOGLE_CREDENTIALS
+    }, { status: 500 });
+  }
   return POST(req);
 }
