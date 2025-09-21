@@ -11,6 +11,19 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Google credentials
+google-credentials.json
+
+# Document processor state
+.processed-files.json
+
+# Test files
+test-sync.js
+test-google-auth.js
+
+# Email files
+*.txt
+
 # Project specific files
 implementation.md
 

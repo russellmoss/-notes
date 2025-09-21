@@ -24,7 +24,17 @@ export async function createNotePage(note: TNoteJSON) {
         `• ${ai.owner}: ${ai.task} — ${ai.due}`
       ).join("\n") || "-"
     }}]},
-    "LLM JSON": { rich_text: [{ type: "text", text: { content: JSON.stringify(note) } }] },
+    "LLM JSON": { rich_text: [{ type: "text", text: { content: JSON.stringify({
+      title: note.title,
+      type: note.type,
+      source: note.source,
+      people: note.people,
+      actionCount: note.action_items.length,
+      keyTakeawayCount: note.key_takeaways.length,
+      hasTranscript: !!note.full_text?.transcript_summary,
+      contentHash: note.content_hash.substring(0, 8) + "...",
+      processedAt: new Date().toISOString()
+    }, null, 2) } }] },
   };
 
   const blocks: any[] = [
