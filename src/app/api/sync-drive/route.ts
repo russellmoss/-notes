@@ -29,9 +29,21 @@ export async function POST(req: NextRequest) {
     if (!process.env.GOOGLE_CREDENTIALS) {
       return NextResponse.json({ 
         error: 'Google credentials not configured',
-        hasCredentials: !!process.env.GOOGLE_CREDENTIALS
+        hasCredentials: !!process.env.GOOGLE_CREDENTIALS,
+        envVars: Object.keys(process.env).filter(key => key.includes('GOOGLE') || key.includes('SYNC') || key.includes('CRON'))
       }, { status: 500 });
     }
+    
+    // Try to parse the credentials to check for JSON errors
+    try {
+      JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    } catch (jsonError) {
+      return NextResponse.json({ 
+        error: 'Google credentials JSON parse error',
+        details: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error'
+      }, { status: 500 });
+    }
+    
     // Verify folder access first
     for (const folder of FOLDERS) {
       const access = await verifyFolderAccess(folder.folderId);
