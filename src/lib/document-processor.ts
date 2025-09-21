@@ -1,5 +1,6 @@
 // src/lib/document-processor.ts
 import { getFilesInFolder, getDocumentText } from './google-drive';
+import { Client } from '@notionhq/client';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -27,6 +28,36 @@ function saveProcessedFiles(data: ProcessedFiles) {
   fs.writeFileSync(PROCESSED_FILES_PATH, JSON.stringify(data, null, 2));
 }
 
+// Check if a Notion page already exists with the given title
+async function checkExistingNotionPage(title: string): Promise<string | null> {
+  try {
+    const notion = new Client({
+      auth: process.env.NOTION_TOKEN,
+    });
+
+    const response = await notion.databases.query({
+      database_id: process.env.NOTION_DB_ID!,
+      filter: {
+        property: 'Title',
+        title: {
+          equals: title
+        }
+      },
+      page_size: 1
+    });
+
+    if (response.results.length > 0) {
+      const page = response.results[0] as any;
+      return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error checking existing Notion page:', error);
+    return null; // If we can't check, proceed anyway
+  }
+}
+
 export interface FolderConfig {
   folderId: string;
   source: 'Otter' | 'MyScript';
@@ -52,11 +83,30 @@ export async function processNewDocuments(folders: FolderConfig[]) {
           continue; // Skip if already processed
         }
 
+        // Skip files older than 1 hour to prevent reprocessing
+        const fileAge = Date.now() - new Date(file.modifiedTime || file.createdTime || 0).getTime();
+        if (fileAge > 60 * 60 * 1000) { // 1 hour in milliseconds
+          console.log(`Skipping old file: ${file.name} (age: ${Math.round(fileAge / 1000 / 60)} minutes)`);
+          continue;
+        }
+
         console.log(`Processing new file: ${file.name}`);
         
         try {
           // Get document content
           const docContent = await getDocumentText(file.id);
+          
+          // Check if a Notion page already exists with this title
+          const existingPage = await checkExistingNotionPage(docContent.title);
+          if (existingPage) {
+            console.log(`Skipping ${file.name} - Notion page already exists: ${existingPage}`);
+            // Still mark as processed to avoid checking again
+            processed[folder.folderId][file.id] = {
+              processedAt: new Date().toISOString(),
+              title: file.name || 'Untitled',
+            };
+            continue;
+          }
           
           // Prepare payload for ingest API
           const payload = {

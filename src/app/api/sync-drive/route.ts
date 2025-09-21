@@ -35,8 +35,9 @@ export async function POST(req: NextRequest) {
     }
     
     // Try to parse the credentials to check for JSON errors
+    let credentials;
     try {
-      JSON.parse(process.env.GOOGLE_CREDENTIALS);
+      credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
     } catch (jsonError) {
       return NextResponse.json({ 
         error: 'Google credentials JSON parse error',
@@ -45,13 +46,22 @@ export async function POST(req: NextRequest) {
     }
     
     // Verify folder access first
-    for (const folder of FOLDERS) {
-      const access = await verifyFolderAccess(folder.folderId);
-      if (!access.success) {
-        return NextResponse.json({
-          error: `Cannot access folder ${folder.name}: ${access.error}`,
-        }, { status: 500 });
+    try {
+      for (const folder of FOLDERS) {
+        const access = await verifyFolderAccess(folder.folderId);
+        if (!access.success) {
+          return NextResponse.json({
+            error: `Cannot access folder ${folder.name}: ${access.error}`,
+            folderId: folder.folderId,
+            folderName: folder.name
+          }, { status: 500 });
+        }
       }
+    } catch (folderError) {
+      return NextResponse.json({
+        error: 'Folder access verification failed',
+        details: folderError instanceof Error ? folderError.message : 'Unknown folder error'
+      }, { status: 500 });
     }
 
     // Process new documents
