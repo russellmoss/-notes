@@ -35,13 +35,13 @@ export async function GET(req: NextRequest) {
         if (access.success) {
           // List files
           const files = await getFilesInFolder(folder.folderId);
-          console.log(`   Found ${files.length} files:`, files.map(f => ({ name: f.name, id: f.id })));
+          console.log(`   Found ${files.length} files:`, files.map((f: any) => ({ name: f.name, id: f.id })));
           
           results.push({
             folder: folder.name,
             access: access,
             fileCount: files.length,
-            files: files.map(f => ({ name: f.name, id: f.id, createdTime: f.createdTime }))
+            files: files.map((f: any) => ({ name: f.name, id: f.id, createdTime: f.createdTime }))
           });
         } else {
           results.push({
