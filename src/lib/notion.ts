@@ -26,6 +26,10 @@ export async function checkExistingDocumentId(documentId: string): Promise<strin
         const pageData = page as any;
         const documentIdProperty = pageData.properties?.['Document ID'];
         
+        console.log(`🔍 Checking page: ${pageData.properties?.Title?.title?.[0]?.text?.content || 'Untitled'}`);
+        console.log(`📋 Document ID property:`, JSON.stringify(documentIdProperty, null, 2));
+        console.log(`🎯 Looking for: ${documentId}`);
+        
         if (documentIdProperty?.rich_text?.[0]?.text?.content === documentId) {
           console.log(`✅ Found existing page for ${documentId}:`, pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`);
           return pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
