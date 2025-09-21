@@ -8,27 +8,35 @@ const DB_ID = process.env.NOTION_DB_ID!;
 // Check if a Notion page already exists with the given Google Drive Document ID
 export async function checkExistingDocumentId(documentId: string): Promise<string | null> {
   try {
+    console.log(`🔍 Checking for existing Document ID: ${documentId}`);
+    
     // Use the correct Notion API method - we need to query the database directly
     // Let's use a type assertion to work around the TypeScript issue
+    // Try a different approach - get all pages and filter manually
     const response = await (notion as any).databases.query({
       database_id: DB_ID,
-      filter: {
-        property: 'Document ID',
-        rich_text: {
-          equals: documentId
-        }
-      },
-      page_size: 1
+      page_size: 100  // Get more pages to search through
     });
 
+    console.log(`📊 Query response for ${documentId}:`, response?.results?.length || 0, 'results found');
+
+    // Manually search through all pages for the Document ID
     if (response.results && response.results.length > 0) {
-      const page = response.results[0] as any;
-      return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
+      for (const page of response.results) {
+        const pageData = page as any;
+        const documentIdProperty = pageData.properties?.['Document ID'];
+        
+        if (documentIdProperty?.rich_text?.[0]?.text?.content === documentId) {
+          console.log(`✅ Found existing page for ${documentId}:`, pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`);
+          return pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
+        }
+      }
     }
     
+    console.log(`❌ No existing page found for ${documentId}`);
     return null;
   } catch (error) {
-    console.error('Error checking existing Document ID:', error);
+    console.error('❌ Error checking existing Document ID:', error);
     return null; // If we can't check, proceed anyway
   }
 }

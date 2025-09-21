@@ -36,11 +36,13 @@ export async function processNewDocuments(folders: FolderConfig[]) {
         
         try {
           // Check if this Document ID already exists in Notion
+          console.log(`🔍 Processing file: ${file.name} (ID: ${file.id})`);
           const existingPage = await checkExistingDocumentId(file.id);
           if (existingPage) {
-            console.log(`Skipping ${file.name} - Document ID already exists in Notion: ${existingPage}`);
+            console.log(`⏭️ Skipping ${file.name} - Document ID already exists in Notion: ${existingPage}`);
             continue;
           }
+          console.log(`✅ No existing page found, proceeding to process ${file.name}`);
 
           // Get document content
           const docContent = await getDocumentText(file.id);
