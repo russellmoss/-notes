@@ -13,7 +13,8 @@ export async function checkExistingDocumentId(documentId: string): Promise<strin
     // Use the correct Notion API method - we need to query the database directly
     // Let's use a type assertion to work around the TypeScript issue
     // Use the correct Notion API method - search for pages
-    const response = await notion.pages.search({
+    // Using type assertion to work around TypeScript definitions
+    const response = await (notion as any).pages.search({
       query: '',
       filter: {
         property: 'object',
