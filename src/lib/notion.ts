@@ -8,22 +8,22 @@ const DB_ID = process.env.NOTION_DB_ID!;
 // Check if a Notion page already exists with the given Google Drive Document ID
 export async function checkExistingDocumentId(documentId: string): Promise<string | null> {
   try {
-    // Use the pages API to search for pages with the Document ID
-    const response = await notion.pages.search({
-      query: documentId,
+    // Use the correct Notion API method - we need to query the database directly
+    // Let's use a type assertion to work around the TypeScript issue
+    const response = await (notion as any).databases.query({
+      database_id: DB_ID,
       filter: {
-        property: 'object',
-        value: 'page'
+        property: 'Document ID',
+        rich_text: {
+          equals: documentId
+        }
       },
       page_size: 1
     });
 
-    if (response.results.length > 0) {
+    if (response.results && response.results.length > 0) {
       const page = response.results[0] as any;
-      // Verify this page is in our database by checking its parent
-      if (page.parent?.database_id === DB_ID) {
-        return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
-      }
+      return page.url || `https://notion.so/${page.id.replace(/-/g, '')}`;
     }
     
     return null;
