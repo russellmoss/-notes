@@ -132,11 +132,26 @@ We use [cron-job.org](https://cron-job.org) for **free** cron job scheduling:
 
 1. 🆓 **Create a free account** at cron-job.org
 2. ➕ **Add a new cron job** with these settings:
-   - 🌐 **URL**: `https://your-app.vercel.app/api/sync-drive`
-   - 📤 **Method**: POST
-   - 🔐 **Headers**: `Authorization: Bearer YOUR_SYNC_API_KEY`
-   - ⏰ **Schedule**: Every 5 minutes
-   - ⏱️ **Timeout**: 30 seconds
+
+#### 🔧 **Cron Job Configuration:**
+
+**Option 1: Query Parameter (Recommended)**
+- 🌐 **URL**: `https://your-app.vercel.app/api/sync-drive?api_key=YOUR_SYNC_API_KEY`
+- 📤 **Method**: POST
+- ⏰ **Schedule**: Every 5 minutes
+- ⏱️ **Timeout**: 30 seconds
+
+**Option 2: Authorization Header**
+- 🌐 **URL**: `https://your-app.vercel.app/api/sync-drive`
+- 📤 **Method**: POST
+- 🔐 **Headers**: `Authorization: Bearer YOUR_SYNC_API_KEY`
+- ⏰ **Schedule**: Every 5 minutes
+- ⏱️ **Timeout**: 30 seconds
+
+#### ⚠️ **Important Notes:**
+- **Special Characters**: If your `SYNC_API_KEY` contains special characters (`+`, `(`, `)`, `&`, `@`, `|`, `}`, `=`), use **Option 1** with URL encoding
+- **URL Encoding**: Replace special characters: `+` → `%2B`, `(` → `%28`, `)` → `%29`, `@` → `%40`, `&` → `%26`, `|` → `%7C`, `}` → `%7D`, `=` → `%3D`
+- **Example**: If your key is `dZ+HG(6jq(FK@&.-u|mr8V}uBYk=yXjJ`, use: `dZ%2BHG%286jq%28FK%40%26.-u%7Cmr8V%7DuBYk%3DyXjJ`
 
 ## 🔌 API Endpoints
 
