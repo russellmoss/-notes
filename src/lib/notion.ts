@@ -57,9 +57,9 @@ export async function createNotePage(note: TNoteJSON) {
     blocks.push(para("-"));
   }
 
-  blocks.push(h2("Body"), para(note.full_text.body || "-"));
+  blocks.push(h2("Body"), para(note.full_text?.body || "-"));
 
-  if (note.full_text.transcript_summary) {
+  if (note.full_text?.transcript_summary) {
     blocks.push(h2("Transcript Summary"), para(note.full_text.transcript_summary));
   }
 
