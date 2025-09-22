@@ -36,6 +36,12 @@ export default function ReviewDashboard() {
   }, []);
 
   const checkAuthAndFetchNotes = async () => {
+    if (!supabase) {
+      setError('Supabase not initialized');
+      setLoading(false);
+      return;
+    }
+    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
@@ -139,7 +145,9 @@ export default function ReviewDashboard() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push('/login');
   };
 
