@@ -38,17 +38,17 @@ export async function summarizeSingleSource(input: {
     transcript_raw: input.transcript_raw || null
   });
 
-  const resp = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    response_format: { type: "json_object" },
-    temperature: 0.2,
-    messages: [
+  const resp = await client.responses.create({
+    model: "gpt-5",
+    input: [
       { role: "system", content: system },
       { role: "user", content: user }
-    ]
+    ],
+    reasoning: { effort: "medium" },
+    text: { verbosity: "medium" }
   });
 
-  const raw = resp.choices[0].message?.content || "{}";
+  const raw = resp.output_text || "{}";
   const json = JSON.parse(raw);
 
   // Fix common LLM response issues

@@ -1,7 +1,7 @@
 // Minimal test route without external dependencies
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   return NextResponse.json({ 
     message: 'Minimal sync-drive route working',
     timestamp: new Date().toISOString(),
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   });
 }
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   return NextResponse.json({ 
     message: 'Minimal sync-drive route POST working',
     timestamp: new Date().toISOString(),

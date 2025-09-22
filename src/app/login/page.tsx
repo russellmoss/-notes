@@ -1,0 +1,107 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { useRouter } from 'next/navigation';
+// import type { AuthSession } from '@/types/auth.types';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('russell@mileaestatevineyard.com');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Create browser-compatible Supabase client
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // Check if already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.refresh();
+        router.push('/review');
+      }
+    };
+    checkAuth();
+  }, [router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Force a refresh to ensure middleware picks up the new session
+      router.refresh();
+      router.push('/review');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="center" style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <div className="container">
+        <form onSubmit={handleLogin} className="card stack" style={{ maxWidth: '400px', margin: '0 auto' }}>
+          <div className="stack text-center">
+                <h1>📚 Russell&apos;s Notes</h1>
+            <p className="text-muted">Login to review your notes</p>
+          </div>
+          
+          {error && (
+            <div className="alert alert--danger">
+              {error}
+            </div>
+          )}
+          
+          <div className="stack">
+            <div className="field">
+              <label className="label">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                required
+              />
+            </div>
+            
+            <div className="field">
+              <label className="label">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                required
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn--primary"
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

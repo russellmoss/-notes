@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import SiteNav from '@/components/SiteNav'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Notes Middleware',
-  description: 'Middleware for processing notes from Otter, MyScript, and Manual sources',
+  title: "Russell's Notes",
+  description: "AI-powered notes processing and review system for Russell's Notes",
 }
 
 export default function RootLayout({
@@ -16,7 +18,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ThemeProvider>
+          <SiteNav />
+          <main style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+            {children}
+          </main>
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

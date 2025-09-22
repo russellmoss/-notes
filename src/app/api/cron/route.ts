@@ -21,6 +21,21 @@ export async function GET(req: NextRequest) {
     }
   );
 
+  // Also trigger the daily review email
+  try {
+    await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/review/email`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.SYNC_API_KEY}`,
+        },
+      }
+    );
+  } catch (e) {
+    console.warn('Failed to trigger review email:', e);
+  }
+
   const result = await response.json();
   return NextResponse.json(result);
 }

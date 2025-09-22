@@ -1,5 +1,5 @@
 // src/app/api/test-sync/route.ts - Testing endpoint without authentication
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { processNewDocuments, FolderConfig } from '@/lib/document-processor';
 import { verifyFolderAccess, getFilesInFolder } from '@/lib/google-drive';
 
@@ -17,7 +17,7 @@ const FOLDERS: FolderConfig[] = [
   },
 ];
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   console.log('🧪 Test sync started...');
   
   try {
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   console.log('🔄 Full sync test started...');
   
   try {

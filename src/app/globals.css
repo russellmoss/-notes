@@ -1,27 +1,105 @@
+/* Import Savvy Wealth Design System */
+@import url('../../savvy.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Chat Response Styling */
+.chat-response {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.chat-response h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+.chat-response h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.chat-response h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.chat-response p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.chat-response ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.chat-response li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.chat-response strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chat-response em {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.chat-response a {
+  color: var(--brand);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.chat-response a:hover {
+  color: var(--brand-600);
+  text-decoration: none;
+}
+
+.chat-response pre {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+.chat-response .mt-4 {
+  margin-top: 1rem;
+}
+
+.chat-response div {
+  margin-bottom: 0.5rem;
 }

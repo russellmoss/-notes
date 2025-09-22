@@ -5,6 +5,23 @@ import { TNoteJSON } from "./schema";
 const notion = new Client({ auth: process.env.NOTION_TOKEN! });
 const DB_ID = process.env.NOTION_DB_ID!;
 
+export interface NotionPageProperties {
+  Title: any;
+  Date: any;
+  "Submission Date": any; // NEW
+  Type: any;
+  People: any;
+  Source: any;
+  TLDR: any;
+  Summary: any;
+  "Action Items": any;
+  "Due Dates": any;
+  "LLM JSON": any;
+  "Document ID"?: any;
+  "Reviewed Next Day"?: any;
+  "Reviewed Week Later"?: any;
+}
+
 // Check if a Notion page already exists with the given Google Drive Document ID
 export async function checkExistingDocumentId(documentId: string): Promise<string | null> {
   try {
@@ -62,35 +79,47 @@ export async function checkExistingDocumentId(documentId: string): Promise<strin
 }
 
 export async function createNotePage(note: TNoteJSON, documentId?: string) {
-  const props: any = {
+  // Add Submission Date as current timestamp
+  const submissionDate = new Date().toISOString();
+  const MAX_RICH_TEXT = 2000;
+  const truncate = (s: string) => (s || '').length > MAX_RICH_TEXT ? (s || '').slice(0, MAX_RICH_TEXT - 3) + '...' : (s || '');
+  
+  const props: NotionPageProperties = {
     Title: { title: [{ type: "text", text: { content: note.title } }] },
-    Date: { date: { start: note.date_iso } },
+    Date: { date: { start: note.date_iso } }, // Original date from LLM
+    "Submission Date": { date: { start: submissionDate } }, // NEW: Actual submission time
     Type: { select: { name: note.type } },
     People: { multi_select: note.people.map((p: any) => ({ name: p })) },
     Source: { select: { name: note.source } },
-    TLDR: { rich_text: [{ type: "text", text: { content: note.tldr } }] },
-    Summary: { rich_text: [{ type: "text", text: { content: note.summary } }] },
+    TLDR: { rich_text: [{ type: "text", text: { content: truncate(note.tldr) } }] },
+    Summary: { rich_text: [{ type: "text", text: { content: truncate(note.summary) } }] },
     "Action Items": { rich_text: [{ type: "text", text: {
-      content: note.action_items.map((ai: any) =>
+      content: truncate(note.action_items.map((ai: any) =>
         `• ${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`
-      ).join("\n") || "-"
+      ).join("\n") || "-")
     }}]},
     "Due Dates": { rich_text: [{ type: "text", text: {
-      content: note.action_items.filter((ai: any) => ai.due).map((ai: any) =>
+      content: truncate(note.action_items.filter((ai: any) => ai.due).map((ai: any) =>
         `• ${ai.owner}: ${ai.task} — ${ai.due}`
-      ).join("\n") || "-"
+      ).join("\n") || "-")
     }}]},
-    "LLM JSON": { rich_text: [{ type: "text", text: { content: JSON.stringify({
-      title: note.title,
-      type: note.type,
-      source: note.source,
-      people: note.people,
-      actionCount: note.action_items.length,
-      keyTakeawayCount: note.key_takeaways.length,
-      hasTranscript: !!note.full_text?.transcript_summary,
-      contentHash: note.content_hash.substring(0, 8) + "...",
-      processedAt: new Date().toISOString()
-    }, null, 2) } }] },
+    "LLM JSON": { rich_text: [{ type: "text", text: { 
+      content: truncate(JSON.stringify({
+        title: note.title,
+        type: note.type,
+        source: note.source,
+        people: note.people,
+        actionCount: note.action_items.length,
+        keyTakeawayCount: note.key_takeaways.length,
+        hasTranscript: !!note.full_text?.transcript_summary,
+        contentHash: note.content_hash.substring(0, 8) + "...",
+        processedAt: new Date().toISOString(),
+        submissionDate, // Include submission date in metadata
+        originalDate: note.date_iso
+      }, null, 2)) 
+    }}]},
+    "Reviewed Next Day": { checkbox: false }, // Initialize as false
+    "Reviewed Week Later": { checkbox: false } // Initialize as false
   };
 
   // Add Document ID if provided
@@ -100,7 +129,7 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
 
   const blocks: any[] = [
     h2("TL;DR"), 
-    para(note.tldr),
+    ...parasFromText(note.tldr),
     h2("Key Takeaways")
   ];
 
@@ -128,19 +157,21 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
     blocks.push(para("-"));
   }
 
-  blocks.push(h2("Body"), para(note.full_text?.body || "-"));
+  blocks.push(h2("Summary"), ...parasFromText(note.summary || "-"));
+  blocks.push(h2("Body"), ...parasFromText(note.full_text?.body || "-"));
 
   if (note.full_text?.transcript_summary) {
-    blocks.push(h2("Transcript Summary"), para(note.full_text.transcript_summary));
+    blocks.push(h2("Transcript Summary"), ...parasFromText(note.full_text.transcript_summary));
   }
 
   const page = await notion.pages.create({
     parent: { database_id: DB_ID },
-    properties: props,
+    properties: props as any,
     children: blocks
   });
 
-  return { pageId: page.id, url: (page as any).url };
+  console.log(`📝 Created Notion page with submission date: ${submissionDate}`);
+  return { pageId: page.id, url: (page as any).url, submissionDate };
 }
 
 const h2 = (text: string) => ({
@@ -152,3 +183,37 @@ const para = (text: string) => ({
   type: "paragraph" as const,
   paragraph: { rich_text: [{ type: "text" as const, text: { content: text } }] }
 });
+
+// Split long text into multiple Notion paragraphs to avoid block-size issues
+const parasFromText = (text: string) => {
+  const chunks: string[] = []
+  const MAX = 1800
+  let remaining = text || ''
+  while (remaining.length > 0) {
+    chunks.push(remaining.slice(0, MAX))
+    remaining = remaining.slice(MAX)
+  }
+  if (chunks.length === 0) chunks.push('-')
+  return chunks.map(t => para(t))
+}
+
+// Test function for submission date tracking
+export async function testSubmissionDate() {
+  const testNote: TNoteJSON = {
+    title: "Test Note with Submission Date",
+    date_iso: "2025-09-19", // Original date
+    type: "Meeting",
+    people: ["Test User"],
+    source: "Manual",
+    tldr: "Testing submission date tracking",
+    summary: "This is a test note to verify submission date is tracked separately",
+    key_takeaways: ["Submission date should be today", "Original date should be preserved"],
+    action_items: [],
+    full_text: { body: "Test content" },
+    content_hash: JSON.stringify({ test: true })
+  };
+  
+  const result = await createNotePage(testNote, "test-doc-id");
+  console.log('✅ Test page created:', result);
+  return result;
+}

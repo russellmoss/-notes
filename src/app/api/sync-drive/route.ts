@@ -41,9 +41,8 @@ export async function POST(req: NextRequest) {
     }
     
     // Try to parse the credentials to check for JSON errors
-    let credentials;
     try {
-      credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+      JSON.parse(process.env.GOOGLE_CREDENTIALS);
     } catch (jsonError) {
       return NextResponse.json({ 
         error: 'Google credentials JSON parse error',

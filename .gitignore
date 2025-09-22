@@ -20,12 +20,14 @@ google-credentials.json
 # Test files
 test-sync.js
 test-google-auth.js
+scripts/test-auth.ts
 
 # Email files
 *.txt
 
 # Project specific files
 implementation.md
+review-implementation.md
 
 # Logs
 logs
@@ -88,7 +90,8 @@ jspm_packages/
 .parcel-cache
 
 # Next.js build output
-.next
+.next/
+out/
 
 # Nuxt.js build / generate output
 .nuxt
@@ -97,6 +100,9 @@ dist
 # Gatsby files
 .cache/
 public
+
+# Vercel
+.vercel
 
 # Storybook build outputs
 .out
@@ -126,3 +132,13 @@ Thumbs.db
 build/
 dist/
 out/
+
+# Supabase
+.supabase/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.tsbuildinfo

@@ -1,31 +1,53 @@
+'use client'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+
 export default function Home() {
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthenticated(!!session)
+    })
+  }, [])
+
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Notes Middleware</h1>
-        <p className="text-gray-600 mb-6">
-          Middleware for processing notes from Otter, MyScript, and Manual sources.
-        </p>
-        
-        <div className="grid gap-4">
-          <div className="p-4 border rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">API Endpoints</h2>
-            <ul className="space-y-2 text-sm">
-              <li><code className="bg-gray-100 px-2 py-1 rounded">GET /api/health</code> - Health check</li>
-              <li><code className="bg-gray-100 px-2 py-1 rounded">POST /api/ingest</code> - Ingest notes</li>
-            </ul>
+    <div className="center" style={{ minHeight: 'calc(100vh - 60px)', padding: 'var(--space-6)' }}>
+      <div className="container">
+        <div className="card stack">
+          <div className="stack">
+                <h1>Welcome to Russell&apos;s Notes</h1>
+            <p className="text-muted">Choose where to go:</p>
           </div>
-          
-          <div className="p-4 border rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">Sources Supported</h2>
-            <ul className="space-y-1 text-sm">
-              <li>• <strong>Otter</strong> - Audio transcription</li>
-              <li>• <strong>MyScript</strong> - Handwritten notes</li>
-              <li>• <strong>Manual</strong> - Direct input</li>
-            </ul>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href={authenticated ? '/review' : '/login'} className="card stack text-center hover:shadow-md transition-all">
+              <div className="text-3xl">📝</div>
+              <div className="font-semibold">Review</div>
+              <div className="small">Review pending notes</div>
+            </Link>
+            <Link href={authenticated ? '/notes' : '/login'} className="card stack text-center hover:shadow-md transition-all">
+              <div className="text-3xl">📚</div>
+              <div className="font-semibold">Notes</div>
+              <div className="small">Browse all notes</div>
+            </Link>
+            <Link href={authenticated ? '/chat' : '/login'} className="card stack text-center hover:shadow-md transition-all">
+              <div className="text-3xl">💬</div>
+              <div className="font-semibold">Chat</div>
+              <div className="small">Ask across your notes</div>
+            </Link>
+            <Link href={authenticated ? '/upload' : '/login'} className="card stack text-center hover:shadow-md transition-all">
+              <div className="text-3xl">⬆️</div>
+              <div className="font-semibold">Upload</div>
+              <div className="small">Import and merge notes</div>
+            </Link>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

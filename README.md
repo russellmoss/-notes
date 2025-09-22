@@ -1,51 +1,77 @@
-# 📝 Notes Middleware
+# 📚 Russell's Notes
 
-> **Never forget anything again** - A Next.js application that automatically processes and organizes notes from multiple sources into a searchable Notion database, creating a comprehensive knowledge base that can be queried with LLMs.
+> **Never forget anything again** - A comprehensive Next.js application that processes, organizes, and manages notes from multiple sources with AI-powered insights, review workflows, and intelligent chat capabilities.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.0.0-black?style=for-the-badge&logo=next.js)
 ![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
-## 🎯 Why This Was Created
+## 🎯 What This App Does
 
-I wanted something where I could write notes and record meetings using Otter.ai and put all those files into a database that I could query later with an LLM. This way we **never forget anything**. We can use Otter and record and we take the summary and put it into a Google doc. If we need the original transcript, it links to it for us. We can also write notes in MyScript and turn those into typing and put those in a Google doc too. This is good because I have bad handwriting and MyScript converts even my handwriting into text at about a 90% accuracy. 🖋️✨
+Russell's Notes is a comprehensive knowledge management system that:
 
-## 🚀 What This App Does
+1. 🔍 **Processes notes from multiple sources** (Otter.ai, MyScript, manual uploads)
+2. 🤖 **Uses AI to extract insights** with GPT-5 for document processing and GPT-5-chat-latest for conversations
+3. 📊 **Organizes everything in Notion** with structured summaries, action items, and metadata
+4. 🔄 **Manages review workflows** with automated email reminders and review tracking
+5. 💬 **Provides intelligent chat** to query your entire knowledge base
+6. 📱 **Offers a beautiful web interface** with dark mode, search, and filtering
+7. ⏰ **Runs automated workflows** via Vercel cron jobs
 
-This middleware automatically:
+## ✨ Key Features
 
-1. 🔍 **Monitors Google Drive folders** for new documents from Otter.ai and MyScript
-2. 🤖 **Processes documents** using OpenAI's LLM to extract structured information
-3. 📊 **Stores organized data** in Notion with summaries, action items, and key takeaways
-4. 🛡️ **Prevents duplicates** using Google Drive Document ID tracking
-5. ⏰ **Runs automatically** via cron jobs to catch new documents
+### 📝 **Multi-Source Note Processing**
+- 🎙️ **Otter.ai Integration**: Automatic transcription processing
+- ✍️ **MyScript Support**: Handwritten notes with 90% accuracy conversion
+- 📤 **Manual Upload**: Direct file upload with transcript/written note merging
+- 🔄 **Google Drive Sync**: Automated monitoring of designated folders
 
-### 📱 Supported Sources
+### 🤖 **AI-Powered Intelligence**
+- 🧠 **GPT-5 Document Processing**: Advanced summarization and insight extraction
+- 💬 **GPT-5-Chat-Latest**: Conversational AI for knowledge base queries
+- 👥 **People Identification**: Automatic detection of meeting participants
+- 📋 **Action Item Extraction**: Structured task identification with owners and due dates
+- 🔍 **Key Takeaway Generation**: Intelligent content summarization
 
-- 🎙️ **Otter.ai**: Audio transcription and meeting notes
-- ✍️ **MyScript**: Handwritten notes converted to text (90% accuracy!)
-- 📝 **Manual**: Direct text input for manual notes
+### 📊 **Review & Workflow Management**
+- ⏰ **Automated Review Reminders**: Daily email notifications for pending reviews
+- 📅 **Review Scheduling**: Next-day and week-later review workflows
+- ✅ **Review Tracking**: Mark notes as reviewed with custom notes
+- 📧 **Email Integration**: Beautiful HTML emails with Gmail SMTP support
 
-### 📋 What Gets Extracted
+### 💬 **Intelligent Chat Interface**
+- 🗣️ **Conversational AI**: Query your entire knowledge base naturally
+- 📚 **Context-Aware**: Maintains conversation history and context
+- 🔍 **Smart Retrieval**: Finds relevant notes based on your questions
+- 💾 **Persistent History**: Chat sessions saved in Supabase database
+- 🎨 **Beautiful Rendering**: Rich HTML responses with proper formatting
 
-For each document, the system extracts:
-- 📄 **Title and date**
-- 🔥 **TL;DR summary**
-- 💡 **Key takeaways**
-- ✅ **Action items with owners and due dates**
-- 📖 **Full text content**
-- 🏷️ **Source information**
+### 📱 **Modern Web Interface**
+- 🌙 **Dark Mode**: Toggle between light and dark themes
+- 🔍 **Advanced Search**: Keyword search across all notes
+- 🏷️ **Smart Filtering**: Filter by date range, people, and source
+- 📊 **Sorting Options**: Sort by date, submission date, or title
+- 📱 **Responsive Design**: Works perfectly on desktop and mobile
 
-## 🛠️ Getting Started
+### 🏗️ **Robust Infrastructure**
+- ☁️ **Vercel Deployment**: Serverless architecture with automatic scaling
+- 🗄️ **Supabase Backend**: Authentication and chat history storage
+- 🔐 **Secure Authentication**: Supabase Auth with session management
+- ⏰ **Cron Jobs**: Automated daily email reminders and sync processes
+- 🛡️ **Error Handling**: Comprehensive error handling and logging
+
+## 🚀 Getting Started
 
 ### 📋 Prerequisites
 
-- 🟢 Node.js 18+ 
-- 📝 A Notion account with API access
+- 🟢 Node.js 18+
+- 📝 Notion account with API access
 - 🤖 OpenAI API key
-- 📁 Google Drive API access
-- ☁️ Google Cloud Service Account
+- 📁 Google Drive API access (optional)
+- ☁️ Supabase account
+- 📧 Gmail account for email notifications
 
 ### ⚡ Quick Installation
 
@@ -69,7 +95,7 @@ For each document, the system extracts:
 
 ## 🔧 Environment Setup
 
-Create a `.env.local` file in the root directory with the following variables:
+Create a `.env.local` file in the root directory:
 
 ```env
 # OpenAI Configuration
@@ -79,17 +105,23 @@ OPENAI_API_KEY=sk-proj-your-openai-api-key
 NOTION_TOKEN=ntn_your-notion-integration-token
 NOTION_DB_ID=your-notion-database-id
 
-# Security
-INGEST_SHARED_SECRET=your-shared-secret-for-api-authentication
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_KEY=your-supabase-service-key
 
-# Google Drive Sync
+# Email Configuration (Gmail SMTP)
+GMAIL_USER=your-email@gmail.com
+GMAIL_APP_PASSWORD=your-app-password
+
+# Security Keys
 SYNC_API_KEY=your-sync-api-key
 CRON_SECRET=your-cron-secret
 
 # Application URL
 NEXT_PUBLIC_APP_URL=https://your-app-domain.vercel.app
 
-# Google Credentials (Service Account JSON)
+# Google Drive (Optional)
 GOOGLE_CREDENTIALS={"type":"service_account","project_id":"your-project",...}
 ```
 
@@ -107,108 +139,201 @@ GOOGLE_CREDENTIALS={"type":"service_account","project_id":"your-project",...}
 4. 🔗 Share your database with the integration
 5. 🆔 Get your database ID from the database URL
 
-#### ☁️ Google Cloud Service Account
-1. 🌐 Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. 📁 Create a new project or select existing one
-3. 🔌 Enable Google Drive API and Google Docs API
-4. 👤 Create a Service Account
-5. 📄 Download the JSON credentials file
-6. 🔗 Share your Google Drive folders with the service account email
+#### ☁️ Supabase Setup
+1. 🌐 Go to [Supabase](https://supabase.com/)
+2. 📁 Create a new project
+3. 🔑 Copy the project URL and anon key
+4. 🗄️ Run the SQL schema from `scripts/supabase-chat-schema.sql`
+5. 🔐 Set up authentication providers
 
-#### 🆔 Database ID
-- 📍 Found in your Notion database URL: `https://notion.so/[database-id]?v=...`
+#### 📧 Gmail App Password
+1. 🔐 Enable 2-factor authentication on your Gmail account
+2. 🔑 Generate an app password for this application
+3. 📝 Use the app password (not your regular password)
 
-## 🚀 Deployment
+## 🏗️ Application Architecture
 
-### ⚡ Vercel Deployment
+```
+📁 Sources (Otter.ai, MyScript, Manual) 
+    ↓
+🔄 Processing Pipeline (GPT-5)
+    ↓
+📊 Notion Database (Structured Storage)
+    ↓
+💬 Chat Interface (GPT-5-Chat-Latest)
+    ↓
+📱 Web Interface (Next.js + Supabase)
+```
 
-1. 🔗 **Connect your GitHub repository to Vercel**
-2. ⚙️ **Set environment variables** in Vercel dashboard
-3. 🚀 **Deploy** - Vercel will automatically build and deploy
+### 🔄 **Data Flow**
 
-### ⏰ Setting Up Cron Jobs
+1. **📥 Ingestion**: Notes from various sources (Otter.ai, MyScript, manual uploads)
+2. **🤖 Processing**: GPT-5 extracts summaries, action items, and insights
+3. **📊 Storage**: Structured data stored in Notion with metadata
+4. **⏰ Review**: Automated email reminders and review workflows
+5. **💬 Query**: Chat interface for intelligent knowledge base queries
+6. **📱 Interface**: Modern web app with search, filtering, and management
 
-We use [cron-job.org](https://cron-job.org) for **free** cron job scheduling:
+## 🎨 User Interface
 
-1. 🆓 **Create a free account** at cron-job.org
-2. ➕ **Add a new cron job** with these settings:
+### 🏠 **Homepage**
+- 🎯 Quick access to all major features
+- 📊 Dashboard with navigation cards
+- 🌙 Dark mode toggle
 
-#### 🔧 **Cron Job Configuration:**
+### 📝 **Review Page**
+- ⏰ Pending reviews for next-day and week-later workflows
+- ✅ Mark notes as reviewed with custom notes
+- 📊 Statistics and progress tracking
+- 🎨 Beautiful card-based interface
 
-**Option 1: Query Parameter (Recommended)**
-- 🌐 **URL**: `https://your-app.vercel.app/api/sync-drive?api_key=YOUR_SYNC_API_KEY`
-- 📤 **Method**: POST
-- ⏰ **Schedule**: Every 5 minutes
-- ⏱️ **Timeout**: 30 seconds
+### 📚 **Notes Page**
+- 🔍 Advanced search and filtering
+- 📅 Date range filtering
+- 👥 People-based filtering
+- 📊 Multiple sorting options
+- 📱 Responsive grid layout
 
-**Option 2: Authorization Header**
-- 🌐 **URL**: `https://your-app.vercel.app/api/sync-drive`
-- 📤 **Method**: POST
-- 🔐 **Headers**: `Authorization: Bearer YOUR_SYNC_API_KEY`
-- ⏰ **Schedule**: Every 5 minutes
-- ⏱️ **Timeout**: 30 seconds
+### 💬 **Chat Interface**
+- 🗣️ Natural language queries
+- 📚 Context-aware responses
+- 💾 Persistent conversation history
+- 🎨 Rich HTML response rendering
+- 🔍 Smart note retrieval
 
-#### ⚠️ **Important Notes:**
-- **Special Characters**: If your `SYNC_API_KEY` contains special characters (`+`, `(`, `)`, `&`, `@`, `|`, `}`, `=`), use **Option 1** with URL encoding
-- **URL Encoding**: Replace special characters: `+` → `%2B`, `(` → `%28`, `)` → `%29`, `@` → `%40`, `&` → `%26`, `|` → `%7C`, `}` → `%7D`, `=` → `%3D`
-- **Example**: If your key is `dZ+HG(6jq(FK@&.-u|mr8V}uBYk=yXjJ`, use: `dZ%2BHG%286jq%28FK%40%26.-u%7Cmr8V%7DuBYk%3DyXjJ`
+### 📤 **Upload Page**
+- 📁 Multi-file upload support
+- 🔄 Transcript and written note merging
+- 👁️ Preview before submission
+- ✏️ Editable preview fields
+- 🚀 One-click Notion submission
 
 ## 🔌 API Endpoints
 
-### 🏥 Health Check
+### 🏥 **Health & Testing**
+- `GET /api/health` - Health check
+- `GET /api/test-env` - Environment validation
+
+### 📝 **Note Management**
+- `GET /api/notes` - List all notes
+- `POST /api/upload/preview` - Process uploaded files
+- `POST /api/upload/submit` - Submit to Notion
+
+### 🔄 **Review Workflow**
+- `GET /api/review/pending` - Get pending reviews
+- `POST /api/review/submit` - Submit review
+- `POST /api/review/complete` - Mark as complete
+- `POST /api/review/email` - Send review reminders
+
+### 💬 **Chat System**
+- `GET /api/chat/conversations` - List conversations
+- `POST /api/chat/conversations` - Create conversation
+- `GET /api/chat/messages` - Get messages
+- `POST /api/chat/messages` - Send message
+
+### 🔄 **Sync & Automation**
+- `POST /api/sync-drive` - Sync Google Drive
+- `POST /api/cron` - Cron job trigger
+
+### 🔐 **Authentication**
+- `POST /api/auth/logout` - User logout
+
+## ⏰ Automated Workflows
+
+### 📧 **Daily Email Reminders**
+- ⏰ Runs daily at 8:00 AM EST (13:00 UTC)
+- 📧 Sends beautiful HTML emails with pending reviews
+- 🔗 Includes direct links to review interface
+- 📊 Shows review statistics and progress
+
+### 🔄 **Google Drive Sync**
+- ⏰ Runs every 5 minutes (configurable)
+- 🔍 Monitors designated folders for new documents
+- 🛡️ Prevents duplicate processing
+- 🤖 Automatically processes new content
+
+## 🛡️ Security & Data Protection
+
+### 🔐 **Authentication**
+- 🔑 Supabase Auth with secure session management
+- 🛡️ Protected routes with middleware
+- 👤 User-specific data isolation
+
+### 🗄️ **Data Storage**
+- 📊 Notion: Primary knowledge base storage
+- ☁️ Supabase: User authentication and chat history
+- 🔒 Encrypted data transmission
+- 🛡️ Row-level security policies
+
+### 🔑 **API Security**
+- 🔐 API key authentication for external services
+- 🛡️ CORS protection
+- 🔒 Environment variable protection
+
+## 🚀 Deployment
+
+### ⚡ **Vercel Deployment**
+
+1. 🔗 **Connect GitHub repository to Vercel**
+2. ⚙️ **Set environment variables** in Vercel dashboard
+3. 🚀 **Deploy** - Automatic build and deployment
+
+### ⏰ **Cron Job Setup**
+
+The app uses Vercel's built-in cron functionality:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 13 * * *"
+    }
+  ]
+}
 ```
-GET /api/health
-```
-Returns basic health status.
 
-### 🔄 Sync Drive
-```
-POST /api/sync-drive
-```
-Triggers manual sync of Google Drive folders. Requires `SYNC_API_KEY` in Authorization header.
+This runs daily at 13:00 UTC (8:00 AM EST) for email reminders.
 
-### 📥 Ingest Notes
-```
-POST /api/ingest
-```
-Processes raw text content and creates structured Notion pages.
+## 🎯 Use Cases
 
-### 🧪 Environment Test
-```
-GET /api/test-env
-```
-Checks if all required environment variables are configured.
+### 👔 **Business Meetings**
+- 📝 Record meetings with Otter.ai
+- 🤖 Extract action items and decisions
+- ⏰ Get reminders to review key points
+- 💬 Query past meetings for context
 
-## 🏗️ Architecture
+### 📚 **Learning & Research**
+- ✍️ Take handwritten notes with MyScript
+- 🔍 Search across all your notes
+- 💡 Get AI insights on your content
+- 📊 Track learning progress
 
-```
-📁 Google Drive Folders → ⏰ Cron Job → 🔄 Sync API → 🤖 Document Processor → 🧠 OpenAI LLM → 📊 Notion Database
-```
+### 🏢 **Project Management**
+- ✅ Track action items with owners and due dates
+- 📅 Review workflows for important decisions
+- 🔍 Find relevant information quickly
+- 💬 Brainstorm with AI assistance
 
-1. 📁 **Google Drive**: Documents from Otter.ai and MyScript
-2. ⏰ **Cron Job**: Triggers sync every 5 minutes
-3. 🤖 **Document Processor**: Extracts content and checks for duplicates
-4. 🧠 **OpenAI LLM**: Processes text and extracts structured information
-5. 📊 **Notion**: Stores organized, searchable knowledge base
+## 🔮 Future Enhancements
 
-## 🛡️ Duplicate Prevention
+### 🧠 **Advanced AI Features**
+- 🔍 Vector database integration for semantic search
+- 🎯 Better context retrieval and relevance scoring
+- 🏷️ Automatic tagging and categorization
+- 🔗 Cross-reference analysis between documents
 
-The system uses Google Drive Document IDs to prevent duplicate processing:
-- 🆔 Each document gets a unique Document ID property in Notion
-- 🔍 Before processing, the system checks if the Document ID already exists
-- ⏭️ If found, the document is skipped
-- ✅ This ensures no duplicate entries in your knowledge base
+### 📊 **Analytics & Insights**
+- 📈 Usage analytics and patterns
+- 🎯 Content effectiveness metrics
+- 📊 Review completion tracking
+- 💡 AI-powered content recommendations
 
-## 🚀 Future Enhancements
-
-### 🧠 Vector Database Integration
-We may want to push these things to a vector database in the future for better parsing and accuracy of recall of our knowledge base, but this is good enough for now. The idea is to build up as much of a knowledge base as possible such that the LLM can act as the best possible assistant and force multiplier. 💪
-
-Potential improvements:
-- 🔍 **Vector embeddings** for semantic search
-- 🎯 **Better context retrieval** for LLM queries
-- 🏷️ **Advanced filtering** and categorization
-- 🔗 **Cross-reference analysis** between documents
+### 🔌 **Integrations**
+- 📅 Calendar integration for meeting context
+- 💼 CRM integration for contact management
+- 📧 Email integration for note extraction
+- 🎥 Video transcription services
 
 ## 🤝 Contributing
 
@@ -224,8 +349,11 @@ MIT License - see LICENSE file for details
 
 ## 🆘 Support
 
-For issues or questions, please open an issue on GitHub or contact the maintainer.
+For issues or questions:
+- 🐛 Open an issue on GitHub
+- 📧 Contact the maintainer
+- 📚 Check the documentation
 
 ---
 
-> **🎯 Goal**: Create a comprehensive, searchable knowledge base that acts as a force multiplier for decision-making and information recall.
+> **🎯 Mission**: Create a comprehensive, intelligent knowledge management system that acts as a force multiplier for decision-making, learning, and information recall. Never forget anything again! 🧠✨

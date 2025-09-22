@@ -1,0 +1,208 @@
+/*
+  Savvy Wealth – Design Tokens & Base UI
+  Drop this file into your app (e.g., /styles/savvy.css) and import it once.
+  Update brand hex values to match final brand guidelines.
+*/
+
+/* ===== CSS Reset (modern minimal) ===== */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body,h1,h2,h3,h4,h5,h6,p,figure,blockquote,dl,dd{margin:0}
+ul[role='list'],ol[role='list']{list-style:none;margin:0;padding:0}
+body{line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img,picture,video,canvas,svg{display:block;max-width:100%}
+input,button,textarea,select{font:inherit}
+button{background:none;border:0;padding:0}
+:focus:not(:focus-visible){outline:none}
+
+/* ===== Design Tokens ===== */
+:root{
+  /* Fonts */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Brand (adjust to exact Savvy palette) */
+  --brand-50:#eef2ff; /* optional tints */
+  --brand-100:#e0e7ff;
+  --brand-200:#c7d2fe;
+  --brand-300:#a5b4fc;
+  --brand-400:#818cf8;
+  --brand-500:#6366f1; /* Primary */
+  --brand-600:#4f46e5;
+  --brand-700:#4338ca;
+  --brand-800:#3730a3;
+  --brand-900:#312e81;
+  --brand:#4f46e5;         /* alias for convenience */
+  --brand-ink:#ffffff;     /* text on brand */
+  --brand-soft:#eef2ff;    /* subtle brand surfaces */
+
+  /* Neutrals */
+  --bg:#f7f8fa;            /* app background */
+  --surface:#ffffff;       /* cards, sheets */
+  --surface-2:#f2f4f7;     /* muted surfaces */
+  --border:#e5e7eb;        /* lines, dividers */
+  --text:#0b1221;          /* primary text */
+  --text-muted:#5b6476;    /* secondary text */
+
+  /* Semantic */
+  --success:#10b981;
+  --success-ink:#052e24;
+  --warning:#f59e0b;
+  --warning-ink:#3a2a05;
+  --danger:#ef4444;
+  --danger-ink:#3f0606;
+  --info:#0ea5e9;
+  --info-ink:#062a3a;
+
+  /* Spacing scale (4px baseline) */
+  --space-0:0px; --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:20px; --space-6:24px; --space-7:28px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
+
+  /* Radii & Shadows */
+  --radius-sm:8px; --radius-md:12px; --radius-lg:20px; --radius-xl:28px; --radius-full:999px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 6px 16px rgba(10, 10, 20, .08);
+  --shadow-lg:0 14px 30px rgba(10, 10, 20, .12);
+
+  /* Typography scale (fluid) */
+  --step--1: clamp(.85rem, .81rem + .2vw, .95rem);
+  --step-0:  clamp(.98rem, .95rem + .3vw, 1.05rem);
+  --step-1:  clamp(1.15rem, 1.05rem + .8vw, 1.35rem);
+  --step-2:  clamp(1.35rem, 1.15rem + 1.1vw, 1.7rem);
+  --step-3:  clamp(1.6rem, 1.25rem + 1.8vw, 2.1rem);
+  --step-4:  clamp(1.9rem, 1.35rem + 2.8vw, 2.6rem);
+  --step-5:  clamp(2.2rem, 1.45rem + 3.8vw, 3.2rem);
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 3px rgba(79,70,229,.18), 0 0 0 5px rgba(79,70,229,.35);
+}
+
+/* Dark theme (auto) */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b0f1a;
+    --surface:#111729;
+    --surface-2:#0d1424;
+    --border:#1f2a44;
+    --text:#ebf1ff;
+    --text-muted:#aeb8d3;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.5);
+    --shadow-md:0 6px 16px rgba(0,0,0,.45);
+    --shadow-lg:0 14px 30px rgba(0,0,0,.5);
+  }
+}
+
+/* Manual theme override: add .theme-dark on <html> or a container */
+.theme-dark{
+  --bg:#0b0f1a; --surface:#111729; --surface-2:#0d1424; --border:#1f2a44; --text:#ebf1ff; --text-muted:#aeb8d3;
+}
+
+/* ===== Base Elements ===== */
+html{font-family:var(--font-sans); color:var(--text); background:var(--bg)}
+body{background:var(--bg); color:var(--text)}
+::selection{background:var(--brand-300); color:var(--brand-900)}
+
+h1{font-size:var(--step-4); font-weight:700; letter-spacing:-.01em}
+h2{font-size:var(--step-3); font-weight:700; letter-spacing:-.01em}
+h3{font-size:var(--step-2); font-weight:650}
+h4{font-size:var(--step-1); font-weight:650}
+p,li,div,span{font-size:var(--step-0)}
+.small{font-size:var(--step--1); color:var(--text-muted)}
+
+/* ===== Layout Helpers ===== */
+.container{width:min(1200px, 92%); margin-inline:auto}
+.stack>*+*{margin-top:var(--space-4)}
+.cluster{display:flex; gap:var(--space-4); align-items:center; flex-wrap:wrap}
+.center{display:grid; place-items:center}
+
+/* ===== Components ===== */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:var(--space-6); box-shadow:var(--shadow-sm)}
+.card--soft{background:var(--surface-2)}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.625rem 1rem; border-radius:var(--radius-md); font-weight:600; line-height:1.2; cursor:pointer; border:1px solid transparent; transition:transform .02s ease, box-shadow .2s ease, background .2s ease, color .2s ease}
+.btn:focus-visible{box-shadow:var(--focus-ring)}
+.btn:active{transform:translateY(1px)}
+.btn--primary{background:var(--brand); color:var(--brand-ink)}
+.btn--primary:hover{filter:brightness(1.05)}
+.btn--secondary{background:var(--surface); color:var(--text); border-color:var(--border)}
+.btn--secondary:hover{background:var(--surface-2)}
+.btn--ghost{background:transparent; color:var(--text); border-color:transparent}
+.btn--ghost:hover{background:var(--surface-2)}
+.btn--danger{background:var(--danger); color:#fff}
+.btn--success{background:var(--success); color:#03281f}
+
+.input, .select, .textarea{width:100%; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-md); padding:.625rem .75rem; outline:none; box-shadow:var(--shadow-sm)}
+.input::placeholder, .textarea::placeholder{color:var(--text-muted)}
+.input:focus, .select:focus, .textarea:focus{border-color:var(--brand-400); box-shadow:var(--focus-ring)}
+
+.label{display:block; font-weight:600; margin-bottom:.4rem}
+.field{display:grid; gap:.5rem}
+.field--inline{display:flex; align-items:center; gap:var(--space-3)}
+
+.badge{display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .5rem; border-radius:var(--radius-full); font-size:.85em; border:1px solid var(--border); background:var(--surface-2); color:var(--text)}
+.badge--brand{background:var(--brand-soft); color:var(--brand-700); border-color:transparent}
+.badge--success{background:color-mix(in srgb, var(--success) 15%, white); color:var(--success-ink); border-color:transparent}
+.badge--danger{background:color-mix(in srgb, var(--danger) 12%, white); color:#3f0606; border-color:transparent}
+
+.alert{border-radius:var(--radius-md); padding:var(--space-5); border:1px solid}
+.alert--info{background:color-mix(in srgb, var(--info) 12%, white); border-color:color-mix(in srgb, var(--info) 35%, white); color:#063247}
+.alert--success{background:color-mix(in srgb, var(--success) 12%, white); border-color:color-mix(in srgb, var(--success) 35%, white); color:var(--success-ink)}
+.alert--warning{background:color-mix(in srgb, var(--warning) 12%, white); border-color:color-mix(in srgb, var(--warning) 35%, white); color:#3a2a05}
+.alert--danger{background:color-mix(in srgb, var(--danger) 12%, white); border-color:color-mix(in srgb, var(--danger) 35%, white); color:#3f0606}
+
+.navbar{position:sticky; top:0; z-index:40; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow-sm)}
+.navbar__inner{height:60px; display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); padding:0 var(--space-6)}
+
+.table{width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden}
+.table th, .table td{padding:.75rem 1rem; border-bottom:1px solid var(--border); text-align:left}
+.table thead th{background:var(--surface-2); font-weight:700}
+
+.switch{--h:24px; --w:44px; --dot:18px; position:relative; width:var(--w); height:var(--h); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-full); cursor:pointer; transition:all .2s ease}
+.switch::after{content:""; position:absolute; top:50%; left:3px; width:var(--dot); height:var(--dot); background:#fff; border:1px solid var(--border); border-radius:50%; box-shadow:var(--shadow-sm); transform:translate(0,-50%); transition:all .2s ease}
+.switch[aria-checked="true"]{background:var(--brand-400); border-color:var(--brand-400)}
+.switch[aria-checked="true"]::after{left:calc(var(--w) - var(--dot) - 3px)}
+
+/* ===== Utilities ===== */
+.mt-4{margin-top:var(--space-4)} .mt-6{margin-top:var(--space-6)} .mt-8{margin-top:var(--space-8)}
+.mb-4{margin-bottom:var(--space-4)} .mb-6{margin-bottom:var(--space-6)} .mb-8{margin-bottom:var(--space-8)}
+.p-4{padding:var(--space-4)} .p-6{padding:var(--space-6)} .p-8{padding:var(--space-8)}
+.text-muted{color:var(--text-muted)} .text-brand{color:var(--brand-600)} .bg-brand{background:var(--brand)}
+.rounded{border-radius:var(--radius-md)} .rounded-lg{border-radius:var(--radius-lg)} .shadow{box-shadow:var(--shadow-md)}
+
+/* ===== Example: Button icon gap ===== */
+.icon{width:1em; height:1em; display:inline-block}
+
+/* ===== Forms: invalid/valid states ===== */
+.input[aria-invalid="true"]{border-color:var(--danger); box-shadow:0 0 0 3px color-mix(in srgb, var(--danger) 24%, transparent)}
+.input[aria-invalid="false"]{border-color:var(--success)}
+
+/* ===== Toast (basic) ===== */
+.toast{position:fixed; right:20px; bottom:20px; display:grid; gap:.5rem; z-index:999}
+.toast__item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:.75rem 1rem; box-shadow:var(--shadow-md)}
+.toast__item--success{border-color:color-mix(in srgb, var(--success) 35%, white)}
+.toast__item--danger{border-color:color-mix(in srgb, var(--danger) 35%, white)}
+
+/* ===== Accessibility helpers ===== */
+.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+
+/* ===== Example usage notes =====
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/savvy.css">
+
+  <div class="navbar"><div class="navbar__inner container"> ... </div></div>
+  <main class="container stack">
+    <h1>Dashboard</h1>
+    <div class="card stack">
+      <p class="text-muted">Welcome to Savvy Wealth.</p>
+      <div class="cluster">
+        <button class="btn btn--primary">Primary</button>
+        <button class="btn btn--secondary">Secondary</button>
+        <button class="btn btn--ghost">Ghost</button>
+      </div>
+      <label class="label" for="email">Email</label>
+      <input class="input" id="email" placeholder="name@savvy.com" />
+    </div>
+  </main>
+===== */
