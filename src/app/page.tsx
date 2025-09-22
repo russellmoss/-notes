@@ -1,20 +1,17 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { useSupabase } from '@/hooks/useSupabase'
 
 export default function Home() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null)
+  const supabase = useSupabase()
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthenticated(!!session)
     })
-  }, [])
+  }, [supabase])
 
   return (
     <div className="center" style={{ minHeight: 'calc(100vh - 60px)', padding: 'var(--space-6)' }}>

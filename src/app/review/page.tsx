@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import debounce from 'lodash/debounce';
+import { useSupabase } from '@/hooks/useSupabase';
 
 interface ReviewNote {
   id: string;
@@ -30,18 +30,13 @@ export default function ReviewDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const router = useRouter();
+  const supabase = useSupabase();
 
   useEffect(() => {
     checkAuthAndFetchNotes();
   }, []);
 
   const checkAuthAndFetchNotes = async () => {
-    if (!supabase) {
-      setError('Supabase not initialized');
-      setLoading(false);
-      return;
-    }
-    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
@@ -145,9 +140,7 @@ export default function ReviewDashboard() {
   };
 
   const handleSignOut = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
+    await supabase.auth.signOut();
     router.push('/login');
   };
 
