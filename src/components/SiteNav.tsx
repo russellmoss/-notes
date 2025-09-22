@@ -2,23 +2,34 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ThemeToggle from './ThemeToggle'
+import { useSupabase } from '@/hooks/useSupabase'
 
 export default function SiteNav() {
   const router = useRouter()
+  const supabase = useSupabase()
   
   const handleLogout = async () => {
     try {
+      // Sign out on client side first
+      await supabase.auth.signOut()
+      
+      // Also call the server-side logout API
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
       })
       
       if (response.ok) {
-        router.push('/login')
+        // Force a page refresh to clear any cached state
+        window.location.href = '/login'
       } else {
         console.error('Logout failed')
+        // Even if server logout fails, redirect to login
+        window.location.href = '/login'
       }
     } catch (error) {
       console.error('Logout error:', error)
+      // Even if there's an error, try to redirect to login
+      router.push('/login')
     }
   }
   
