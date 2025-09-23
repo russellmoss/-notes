@@ -33,13 +33,14 @@ export default function ReviewDashboard() {
   const supabase = useSupabase();
 
   useEffect(() => {
-    checkAuthAndFetchNotes();
+    checkAuthAndMaybeFetch();
   }, []);
 
-  const checkAuthAndFetchNotes = async () => {
+  const checkAuthAndMaybeFetch = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      router.push('/login');
+      // Rely on middleware for protection; render friendly state client-side
+      setLoading(false);
       return;
     }
     await fetchNotesForReview();
