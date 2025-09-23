@@ -5,8 +5,8 @@ const nextConfig = {
     // Prevent tracing into native/icon build tooling to avoid micromatch recursion on Vercel
     outputFileTracingExcludes: {
       '*': [
-        'node_modules/sharp/**',
-        'node_modules/png-to-ico/**'
+        '**/node_modules/sharp/**',
+        '**/node_modules/png-to-ico/**'
       ]
     }
   }
