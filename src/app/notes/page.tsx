@@ -36,11 +36,17 @@ export default function NotesPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/notes', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Failed to load notes');
-        const data = await res.json();
-        setNotes(data.notes as NoteItem[]);
+        const base = process.env.NEXT_PUBLIC_APP_URL || '';
+        const url = base ? `${base}/api/notes` : '/api/notes';
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res && res.ok) {
+          const data = await res.json();
+          setNotes(data.notes as NoteItem[]);
+        } else {
+          setNotes([]);
+        }
       } catch (e: any) {
+        setNotes([]);
         setError(e?.message || 'Failed to load notes');
       } finally {
         setLoading(false);

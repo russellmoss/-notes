@@ -50,12 +50,18 @@ export default function ReviewDashboard() {
     setError(null);
     
     try {
-      const response = await fetch('/api/review/pending');
-      if (!response.ok) throw new Error('Failed to fetch notes');
-      
-      const data = await response.json();
-      setNotes(data.notes);
+      const base = process.env.NEXT_PUBLIC_APP_URL || '';
+      const url = base ? `${base}/api/review/pending` : '/api/review/pending';
+      const response = await fetch(url, { cache: 'no-store' });
+      if (response && response.ok) {
+        const data = await response.json();
+        setNotes(data.notes);
+      } else {
+        // fall back to empty without failing build
+        setNotes([]);
+      }
     } catch (err) {
+      setNotes([]);
       setError(err instanceof Error ? err.message : 'Failed to load notes');
     } finally {
       setLoading(false);

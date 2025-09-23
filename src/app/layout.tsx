@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Russell" }],
   generator: "Next.js",
   keywords: ["winery", "notes", "management", "AI", "productivity"],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://example.com'),
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
