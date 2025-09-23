@@ -1,10 +1,7 @@
 {
   "functions": {
-    "**": {
-      "excludeFiles": "node_modules/{sharp,png-to-ico}/**"
-    },
     "api/**": {
-      "excludeFiles": "scripts/**"
+      "excludeFiles": "{node_modules/{sharp,png-to-ico}/**,scripts/**}"
     }
   },
   "crons": [
