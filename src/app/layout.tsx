@@ -31,7 +31,7 @@ export const metadata: Metadata = {
       { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#722F37' },
     ]
   },
-  manifest: '/site.webmanifest',
+  manifest: '/site.webmanifest?v=8VPQHFLrM',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
