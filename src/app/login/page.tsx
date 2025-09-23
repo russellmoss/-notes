@@ -17,12 +17,11 @@ export default function LoginPage() {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.refresh();
-        router.push('/review');
+        router.replace('/review');
       }
     };
     checkAuth();
-  }, [router]);
+  }, [router, supabase.auth]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +38,8 @@ export default function LoginPage() {
         throw error;
       }
       
-      // Force a refresh to ensure middleware picks up the new session
-      router.refresh();
-      router.push('/review');
+      // Navigate to review after successful login
+      router.replace('/review');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

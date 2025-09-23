@@ -13,14 +13,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Russell" }],
   generator: "Next.js",
   keywords: ["winery", "notes", "management", "AI", "productivity"],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://example.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://notes-lemon-sigma.vercel.app'),
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico?v=8VPQHFLrM', sizes: 'any' },
+      { url: '/favicon-16x16.png?v=8VPQHFLrM', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png?v=8VPQHFLrM', sizes: '32x32', type: 'image/png' },
     ],
-    shortcut: ['/favicon.ico'],
+    shortcut: ['/favicon.ico?v=8VPQHFLrM'],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180' },
       { url: '/apple-touch-icon-152x152.png', sizes: '152x152' },
@@ -88,11 +88,11 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="format-detection" content="telephone=no" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="icon" href="/favicon.ico?v=8VPQHFLrM" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=8VPQHFLrM" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=8VPQHFLrM" />
+        <link rel="shortcut icon" href="/favicon.ico?v=8VPQHFLrM" />
+        <link rel="manifest" href="/site.webmanifest?v=8VPQHFLrM" />
         <link rel="apple-touch-startup-image" href="/apple-splash-2048x2732.png" />
       </head>
       <body className={inter.className}>
