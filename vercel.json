@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/**": {
+    "src/app/api/**": {
       "excludeFiles": "{node_modules/{sharp,png-to-ico}/**,scripts/**}"
     }
   },
