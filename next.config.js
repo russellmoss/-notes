@@ -6,7 +6,8 @@ const nextConfig = {
     outputFileTracingExcludes: {
       '*': [
         '**/node_modules/sharp/**',
-        '**/node_modules/png-to-ico/**'
+        '**/node_modules/png-to-ico/**',
+        '**/scripts/**'
       ]
     }
   }
