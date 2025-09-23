@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "**": {
+      "excludeFiles": [
+        "node_modules/sharp/**",
+        "node_modules/png-to-ico/**",
+        "scripts/**"
+      ]
+    }
+  }
+}
+{
   "crons": [
     {
       "path": "/api/cron",
