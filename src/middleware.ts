@@ -97,5 +97,11 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/review/:path*', '/login'],
+  matcher: [
+    '/',
+    '/review/:path*',
+    '/login',
+    // Exclude static assets and manifest
+    '/((?!_next|favicon.ico|favicon-16x16.png|favicon-32x32.png|site.webmanifest|android-chrome-192x192.png|android-chrome-512x512.png|apple-touch-icon.png|apple-touch-icon-120x120.png|apple-touch-icon-152x152.png|apple-touch-icon-167x167.png|apple-splash-).* )',
+  ],
 };
