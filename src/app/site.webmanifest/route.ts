@@ -14,7 +14,11 @@ export async function GET() {
     ]
   }
   return new NextResponse(JSON.stringify(body), {
-    headers: { 'Content-Type': 'application/manifest+json; charset=utf-8' },
+    status: 200,
+    headers: {
+      'Content-Type': 'application/manifest+json; charset=utf-8',
+      'Cache-Control': 'public, max-age=0, s-maxage=600',
+    },
   })
 }
 
