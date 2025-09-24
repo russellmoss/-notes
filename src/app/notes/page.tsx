@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 
 interface NoteItem {
   id: string;
@@ -21,6 +21,10 @@ export default function NotesPage() {
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [previousNoteCount, setPreviousNoteCount] = useState(0);
+  const [showNewNotesNotification, setShowNewNotesNotification] = useState(false);
   
   // Filter and search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,29 +35,75 @@ export default function NotesPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const base = process.env.NEXT_PUBLIC_APP_URL || '';
-        const url = base ? `${base}/api/notes` : '/api/notes';
-        const res = await fetch(url, { cache: 'no-store' });
-        if (res && res.ok) {
-          const data = await res.json();
-          setNotes(data.notes as NoteItem[]);
-        } else {
-          setNotes([]);
+  const loadNotes = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Always use local API when running locally
+      const url = '/api/notes';
+      
+      const res = await fetch(url, { cache: 'no-store' });
+      
+      if (res && res.ok) {
+        const data = await res.json();
+        const newNotes = data.notes as NoteItem[];
+        
+        // Check if new notes were added
+        if (previousNoteCount > 0 && newNotes.length > previousNoteCount) {
+          setShowNewNotesNotification(true);
+          // Auto-hide notification after 5 seconds
+          setTimeout(() => setShowNewNotesNotification(false), 5000);
         }
-      } catch (e: any) {
+        
+        setNotes(newNotes);
+        setPreviousNoteCount(newNotes.length);
+        setLastUpdated(new Date());
+      } else {
         setNotes([]);
-        setError(e?.message || 'Failed to load notes');
-      } finally {
-        setLoading(false);
       }
-    };
-    load();
-  }, []);
+    } catch (e: any) {
+      setNotes([]);
+      setError(e?.message || 'Failed to load notes');
+    } finally {
+      setLoading(false);
+    }
+  }, [previousNoteCount]);
+
+  useEffect(() => {
+    loadNotes();
+    
+    // Auto-refresh every 5 minutes to get new notes
+    const interval = setInterval(loadNotes, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [loadNotes]);
+
+  const triggerSync = async () => {
+    setSyncing(true);
+    try {
+      // Always use local API when running locally
+      const url = '/api/sync-drive';
+      const res = await fetch(url, { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_API_KEY || ''}`
+        }
+      });
+      
+      if (res.ok) {
+        // Wait a moment for sync to complete, then refresh notes
+        setTimeout(() => {
+          loadNotes();
+        }, 2000);
+      } else {
+        setError('Failed to trigger sync');
+      }
+    } catch (e: any) {
+      setError('Failed to trigger sync: ' + e?.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Get all unique people for filter dropdown
   const allPeople = useMemo(() => {
@@ -172,6 +222,13 @@ export default function NotesPage() {
 
   return (
     <div className="container stack" style={{ minHeight: '100vh', padding: 'var(--space-6)' }}>
+      {/* New Notes Notification */}
+      {showNewNotesNotification && (
+        <div className="alert alert--success" style={{ marginBottom: 'var(--space-4)' }}>
+          🎉 New notes detected! The list has been updated.
+        </div>
+      )}
+      
       <div className="cluster">
         <h1>All Notes</h1>
         <div className="cluster">
@@ -180,6 +237,20 @@ export default function NotesPage() {
             className="btn btn--ghost"
           >
             {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
+          <button 
+            onClick={loadNotes}
+            disabled={loading}
+            className="btn btn--secondary"
+          >
+            {loading ? 'Refreshing...' : 'Refresh Notes'}
+          </button>
+          <button 
+            onClick={triggerSync}
+            disabled={syncing}
+            className="btn btn--ghost"
+          >
+            {syncing ? 'Syncing...' : 'Sync from Drive'}
           </button>
           <a href="/review" className="btn btn--primary">Go to Review →</a>
         </div>
@@ -281,6 +352,14 @@ export default function NotesPage() {
           {searchQuery && ` matching "${searchQuery}"`}
           {selectedPeople.length > 0 && ` with ${selectedPeople.join(', ')}`}
         </p>
+        {lastUpdated && (
+          <p className="text-muted small">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+            {loading && <span className="text-brand"> • Refreshing...</span>}
+            <br />
+            <span className="text-muted">Auto-refresh every 5 minutes • Sync from Google Drive every 30 minutes during business hours</span>
+          </p>
+        )}
       </div>
 
       {/* Notes List */}

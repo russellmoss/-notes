@@ -34,9 +34,9 @@ export default function ReviewDashboard() {
 
   useEffect(() => {
     checkAuthAndMaybeFetch();
-  }, []);
+  }, [checkAuthAndMaybeFetch]);
 
-  const checkAuthAndMaybeFetch = async () => {
+  const checkAuthAndMaybeFetch = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       // Rely on middleware for protection; render friendly state client-side
@@ -44,9 +44,9 @@ export default function ReviewDashboard() {
       return;
     }
     await fetchNotesForReview();
-  };
+  }, [supabase.auth, fetchNotesForReview]);
 
-  const fetchNotesForReview = async () => {
+  const fetchNotesForReview = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -67,7 +67,7 @@ export default function ReviewDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const toggleReviewed = (noteId: string) => {
     setNotes(prev => prev.map(note => 

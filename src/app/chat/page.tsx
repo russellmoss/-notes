@@ -57,7 +57,7 @@ export default function ChatPage() {
       }
     }
     loadConversations()
-  }, [])
+  }, [currentConversationId])
 
   // Removed unused queryString
 

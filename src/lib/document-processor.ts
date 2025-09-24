@@ -1,6 +1,7 @@
 // src/lib/document-processor.ts
 import { getFilesInFolder, getDocumentText } from './google-drive';
 import { checkExistingDocumentId } from './notion';
+import { logger } from './logger';
 import crypto from 'crypto';
 
 // No more file-based tracking - we use Document ID checking instead
@@ -15,7 +16,7 @@ export async function processNewDocuments(folders: FolderConfig[]) {
   const results = [];
 
   for (const folder of folders) {
-    console.log(`Checking folder: ${folder.name}`);
+    logger.info(`Checking folder: ${folder.name}`);
     
     try {
       const files = await getFilesInFolder(folder.folderId);
@@ -28,21 +29,21 @@ export async function processNewDocuments(folders: FolderConfig[]) {
         // Skip files older than 1 hour to prevent reprocessing
         const fileAge = Date.now() - new Date(file.modifiedTime || file.createdTime || 0).getTime();
         if (fileAge > 60 * 60 * 1000) { // 1 hour in milliseconds
-          console.log(`Skipping old file: ${file.name} (age: ${Math.round(fileAge / 1000 / 60)} minutes)`);
+          logger.info(`Skipping old file: ${file.name}`, { ageMinutes: Math.round(fileAge / 1000 / 60) });
           continue;
         }
 
-        console.log(`Processing new file: ${file.name}`);
+        logger.info(`Processing new file: ${file.name}`);
         
         try {
           // Check if this Document ID already exists in Notion
-          console.log(`🔍 Processing file: ${file.name} (ID: ${file.id})`);
+          logger.debug(`Processing file: ${file.name}`, { documentId: file.id });
           const existingPage = await checkExistingDocumentId(file.id);
           if (existingPage) {
-            console.log(`⏭️ Skipping ${file.name} - Document ID already exists in Notion: ${existingPage}`);
+            logger.info(`Skipping ${file.name} - Document ID already exists in Notion`, { existingPage });
             continue;
           }
-          console.log(`✅ No existing page found, proceeding to process ${file.name}`);
+          logger.info(`No existing page found, proceeding to process ${file.name}`);
 
           // Get document content
           const docContent = await getDocumentText(file.id);
@@ -97,10 +98,10 @@ export async function processNewDocuments(folders: FolderConfig[]) {
             notionUrl: result.url,
           });
 
-          console.log(`✓ Processed: ${file.name} → Notion: ${result.url}`);
+          logger.info(`Processed: ${file.name} → Notion`, { notionUrl: result.url });
           
         } catch (error) {
-          console.error(`Error processing file ${file.name}:`, error);
+          logger.error(`Error processing file ${file.name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
           results.push({
             folder: folder.name,
             file: file.name,
@@ -110,7 +111,7 @@ export async function processNewDocuments(folders: FolderConfig[]) {
         }
       }
     } catch (error) {
-      console.error(`Error accessing folder ${folder.name}:`, error);
+      logger.error(`Error accessing folder ${folder.name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 

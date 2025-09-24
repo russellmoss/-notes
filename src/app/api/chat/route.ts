@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client } from '@notionhq/client'
 import OpenAI from 'openai'
+import {
+  ChatRequest,
+  ChatResponse,
+  NotionContextNote,
+  OpenAIMessage,
+  OpenAIResponse
+} from '../../../types/chat.types'
+import { NotionDatabase, NotionDataSourceQueryResult, NotionPage } from '../../../types/notion.types'
 
 function parseDateRange(params: URLSearchParams) {
   const preset = params.get('preset') // '30','60','90','custom'
@@ -24,7 +32,7 @@ function parseDateRange(params: URLSearchParams) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { question } = await req.json()
+    const { question } = await req.json() as ChatRequest
     if (!question || typeof question !== 'string') {
       return NextResponse.json({ error: 'Missing question' }, { status: 400 })
     }
@@ -33,8 +41,8 @@ export async function POST(req: NextRequest) {
     const { startDate, endDate } = parseDateRange(params)
 
     const notion = new Client({ auth: process.env.NOTION_TOKEN! })
-    const database = await notion.databases.retrieve({ database_id: process.env.NOTION_DB_ID! })
-    const dataSourceId = (database as any).data_sources?.[0]?.id
+    const database = await notion.databases.retrieve({ database_id: process.env.NOTION_DB_ID! }) as NotionDatabase
+    const dataSourceId = database.data_sources?.[0]?.id
     if (!dataSourceId) return NextResponse.json({ error: 'No Notion data source' }, { status: 500 })
 
     // Pull pages in window by Submission Date and include key fields for context
@@ -53,13 +61,13 @@ export async function POST(req: NextRequest) {
         ],
       },
       page_size: 100,
-    })
+    }) as NotionDataSourceQueryResult
 
-    const notes = (result.results || []).map((page: any) => {
+    const notes: NotionContextNote[] = (result.results || []).map((page: NotionPage) => {
       const p = page.properties
       return {
         id: page.id,
-        url: page.url,
+        url: page.url || '',
         title: p.Title?.title?.[0]?.text?.content || 'Untitled',
         date: p.Date?.date?.start || '',
         submissionDate: p['Submission Date']?.date?.start || '',
@@ -68,7 +76,7 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const contextBlocks = notes.map((n: any) => (
+    const contextBlocks = notes.map((n: NotionContextNote) => (
       `Title: ${n.title}\nDate: ${n.date}\nSubmitted: ${n.submissionDate}\nTLDR: ${n.tldr}\nSummary: ${n.summary}\nLink: ${n.url}`
     ))
 
@@ -96,16 +104,17 @@ If a note is referenced, include its link in the sources.`
         { role: 'user', content: prompt },
       ],
       text: { verbosity: 'medium' }
-    })
+    }) as OpenAIResponse
 
     const answer = completion.output_text || ''
 
     // crude heuristic: collect cited titles if the model used them
-    const citations = notes.slice(0, 10).map((n: any) => ({ title: n.title, url: n.url }))
+    const citations = notes.slice(0, 10).map((n: NotionContextNote) => ({ title: n.title, url: n.url }))
 
-    return NextResponse.json({ answer, citations, count: notes.length, window: { start: startDate, end: endDate } })
-  } catch (e: any) {
+    const response: ChatResponse = { answer, citations, count: notes.length, window: { start: startDate, end: endDate } }
+    return NextResponse.json(response)
+  } catch (e: unknown) {
     console.error('Chat error', e)
-    return NextResponse.json({ error: e?.message || 'Chat failed' }, { status: 500 })
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Chat failed' }, { status: 500 })
   }
 }

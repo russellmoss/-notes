@@ -2,9 +2,17 @@
 import { google } from 'googleapis';
 import path from 'path';
 import fs from 'fs';
+import {
+  GoogleDriveService,
+  GoogleDocsService,
+  GoogleAuth,
+  DocumentTextResult,
+  FolderAccessResult,
+  GoogleDocsElement
+} from '../types/google-drive.types';
 
 // Initialize auth from service account
-function getAuth() {
+function getAuth(): GoogleAuth {
   // Check if we have environment variables for production deployment
   if (process.env.GOOGLE_CREDENTIALS) {
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
@@ -37,19 +45,19 @@ function getAuth() {
 }
 
 // Lazy-loaded instances to avoid build-time errors
-let _drive: any = null;
-let _docs: any = null;
+let _drive: GoogleDriveService | null = null;
+let _docs: GoogleDocsService | null = null;
 
-function getDrive() {
+function getDrive(): GoogleDriveService {
   if (!_drive) {
-    _drive = google.drive({ version: 'v3', auth: getAuth() });
+    _drive = google.drive({ version: 'v3', auth: getAuth() }) as GoogleDriveService;
   }
   return _drive;
 }
 
-function getDocs() {
+function getDocs(): GoogleDocsService {
   if (!_docs) {
-    _docs = google.docs({ version: 'v1', auth: getAuth() });
+    _docs = google.docs({ version: 'v1', auth: getAuth() }) as GoogleDocsService;
   }
   return _docs;
 }
@@ -67,7 +75,7 @@ export async function getFilesInFolder(folderId: string) {
 }
 
 // Get document content as plain text
-export async function getDocumentText(documentId: string) {
+export async function getDocumentText(documentId: string): Promise<DocumentTextResult> {
   const docs = getDocs();
   const doc = await docs.documents.get({
     documentId,
@@ -76,19 +84,19 @@ export async function getDocumentText(documentId: string) {
   // Extract text from the document
   let text = '';
   
-  function extractText(element: any): string {
+  function extractText(element: GoogleDocsElement): string {
     if (element.paragraph) {
       return element.paragraph.elements
-        .map((el: any) => el.textRun?.content || '')
+        .map((el) => el.textRun?.content || '')
         .join('');
     }
     if (element.table) {
       return element.table.tableRows
-        .map((row: any) => 
+        .map((row) => 
           row.tableCells
-            .map((cell: any) => 
+            .map((cell) => 
               cell.content
-                .map((content: any) => extractText(content))
+                .map((content) => extractText(content))
                 .join('')
             )
             .join('\t')
@@ -100,7 +108,7 @@ export async function getDocumentText(documentId: string) {
 
   if (doc.data.body?.content) {
     text = doc.data.body.content
-      .map((element: any) => extractText(element))
+      .map((element) => extractText(element))
       .join('')
       .trim();
   }
@@ -113,7 +121,7 @@ export async function getDocumentText(documentId: string) {
 }
 
 // Check if we have access to a folder
-export async function verifyFolderAccess(folderId: string) {
+export async function verifyFolderAccess(folderId: string): Promise<FolderAccessResult> {
   try {
     const drive = getDrive();
     const response = await drive.files.get({
@@ -129,10 +137,10 @@ export async function verifyFolderAccess(folderId: string) {
       success: true,
       folderName: response.data.name,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }

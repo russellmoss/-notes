@@ -3,6 +3,17 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import OpenAI from 'openai'
 import { Client } from '@notionhq/client'
+import {
+  MessageRequest,
+  MessageResponse,
+  ConversationRequest,
+  ConversationResponse,
+  NotionContextNote,
+  OpenAIMessage,
+  OpenAIResponse,
+  CookieOptions
+} from '../../../types/chat.types'
+import { NotionDatabase, NotionDataSourceQueryResult, NotionPage } from '../../../types/notion.types'
 
 function getSupabaseServer() {
   const cookieStore = cookies()
@@ -14,10 +25,10 @@ function getSupabaseServer() {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: CookieOptions) {
           cookieStore.set({ name, value, ...options })
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: CookieOptions) {
           cookieStore.set({ name, value: '', ...options })
         },
       },
@@ -41,12 +52,14 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ messages: data || [] })
+  
+  const response: ConversationResponse = { messages: data || [] }
+  return NextResponse.json(response)
 }
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabaseServer()
-  const { conversation_id, content } = await req.json()
+  const { conversation_id, content } = await req.json() as MessageRequest
   if (!conversation_id || !content) return NextResponse.json({ error: 'conversation_id and content required' }, { status: 400 })
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -63,7 +76,7 @@ export async function POST(req: NextRequest) {
     .eq('conversation_id', conversation_id)
     .order('created_at', { ascending: true })
 
-  const messages = (hist || []).map(m => ({ role: m.role as 'system'|'user'|'assistant', content: m.content }))
+  const messages: OpenAIMessage[] = (hist || []).map(m => ({ role: m.role as 'system'|'user'|'assistant', content: m.content }))
 
   // Get Notion context for the latest user message
   const latestUserMessage = messages.filter(m => m.role === 'user').pop()
@@ -72,8 +85,8 @@ export async function POST(req: NextRequest) {
   if (latestUserMessage) {
     try {
       const notion = new Client({ auth: process.env.NOTION_TOKEN! })
-      const database = await notion.databases.retrieve({ database_id: process.env.NOTION_DB_ID! })
-      const dataSourceId = (database as any).data_sources?.[0]?.id
+      const database = await notion.databases.retrieve({ database_id: process.env.NOTION_DB_ID! }) as NotionDatabase
+      const dataSourceId = database.data_sources?.[0]?.id
       
       if (dataSourceId) {
         const now = new Date()
@@ -97,13 +110,13 @@ export async function POST(req: NextRequest) {
             ],
           },
           page_size: 50,
-        })
+        }) as NotionDataSourceQueryResult
 
-        const notes = (result.results || []).map((page: any) => {
+        const notes: NotionContextNote[] = (result.results || []).map((page: NotionPage) => {
           const p = page.properties
           return {
             id: page.id,
-            url: page.url,
+            url: page.url || '',
             title: p.Title?.title?.[0]?.text?.content || 'Untitled',
             date: p.Date?.date?.start || '',
             submissionDate: p['Submission Date']?.date?.start || '',
@@ -112,7 +125,7 @@ export async function POST(req: NextRequest) {
           }
         })
 
-        const contextBlocks = notes.map((n: any) => (
+        const contextBlocks = notes.map((n: NotionContextNote) => (
           `Title: ${n.title}\nDate: ${n.date}\nSubmitted: ${n.submissionDate}\nTLDR: ${n.tldr}\nSummary: ${n.summary}\nLink: ${n.url}`
         ))
 
@@ -124,8 +137,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Add system message with Notion context
-  const systemMessage = {
-    role: 'system' as const,
+  const systemMessage: OpenAIMessage = {
+    role: 'system',
     content: `You are an expert executive assistant for a Revenue Operations manager.
 Use the provided notes as primary context. When helpful, you may use up-to-date web knowledge, but prioritize the notes.
 Synthesize thorough, actionable answers. Format your response as clean HTML with proper styling:
@@ -147,7 +160,7 @@ If a note is referenced, include its link in the sources.${notionContext}`
     model: 'gpt-5-chat-latest',
     input: [systemMessage, ...messages],
     text: { verbosity: 'medium' }
-  })
+  }) as OpenAIResponse
   const reply = completion.output_text || ''
 
   // Save assistant message
@@ -157,5 +170,6 @@ If a note is referenced, include its link in the sources.${notionContext}`
   // Touch conversation updated_at
   await supabase.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversation_id)
 
-  return NextResponse.json({ reply })
+  const response: MessageResponse = { reply }
+  return NextResponse.json(response)
 }

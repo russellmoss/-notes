@@ -1,79 +1,75 @@
 // src/lib/notion.ts
 import { Client } from "@notionhq/client";
 import { TNoteJSON } from "./schema";
+import { logger } from "./logger";
+import {
+  NotionPageProperties,
+  NotionDatabase,
+  NotionDataSourceQueryResult,
+  NotionPage,
+  NotionPageCreateResult,
+  NotionBlock,
+  NotionDocumentElement
+} from "../types/notion.types";
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN! });
 const DB_ID = process.env.NOTION_DB_ID!;
 
-export interface NotionPageProperties {
-  Title: any;
-  Date: any;
-  "Submission Date": any; // NEW
-  Type: any;
-  People: any;
-  Source: any;
-  TLDR: any;
-  Summary: any;
-  "Action Items": any;
-  "Due Dates": any;
-  "LLM JSON": any;
-  "Document ID"?: any;
-  "Reviewed Next Day"?: any;
-  "Reviewed Week Later"?: any;
-}
-
 // Check if a Notion page already exists with the given Google Drive Document ID
 export async function checkExistingDocumentId(documentId: string): Promise<string | null> {
   try {
-    console.log(`🔍 Checking for existing Document ID: ${documentId}`);
+    logger.debug(`Checking for existing Document ID: ${documentId}`);
     
     // First, get the database to find its data sources
     const database = await notion.databases.retrieve({
       database_id: DB_ID
-    });
+    }) as NotionDatabase;
     
-    console.log(`📊 Database retrieved:`, database.id);
+    logger.debug(`Database retrieved`, { databaseId: database.id });
     
     // Get the first data source (most databases have one)
-    const dataSourceId = (database as any).data_sources?.[0]?.id;
+    const dataSourceId = database.data_sources?.[0]?.id;
     
     if (!dataSourceId) {
-      console.log(`❌ No data source found in database`);
+      logger.warn(`No data source found in database`);
       return null;
     }
     
-    console.log(`🔍 Querying data source: ${dataSourceId}`);
+    logger.debug(`Querying data source`, { dataSourceId });
     
     // Query the data source to get all pages
     const response = await (notion as any).dataSources.query({
       data_source_id: dataSourceId,
       page_size: 100
-    });
+    }) as NotionDataSourceQueryResult;
     
-    console.log(`📊 Query response for ${documentId}:`, response?.results?.length || 0, 'results found');
+    logger.debug(`Query response for ${documentId}`, { resultCount: response?.results?.length || 0 });
 
     // Search through all pages for the Document ID
     if (response.results && response.results.length > 0) {
       for (const page of response.results) {
-        const pageData = page as any;
+        const pageData = page as NotionPage;
         const documentIdProperty = pageData.properties?.['Document ID'];
         
-        console.log(`🔍 Checking page: ${pageData.properties?.Title?.title?.[0]?.text?.content || 'Untitled'}`);
-        console.log(`📋 Document ID property:`, JSON.stringify(documentIdProperty, null, 2));
-        console.log(`🎯 Looking for: ${documentId}`);
+        logger.debug(`Checking page`, { 
+          title: pageData.properties?.Title?.title?.[0]?.text?.content || 'Untitled',
+          documentIdProperty: documentIdProperty,
+          lookingFor: documentId
+        });
         
         if (documentIdProperty?.rich_text?.[0]?.text?.content === documentId) {
-          console.log(`✅ Found existing page for ${documentId}:`, pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`);
-          return pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
+          const existingUrl = pageData.url || `https://notion.so/${pageData.id.replace(/-/g, '')}`;
+          logger.info(`Found existing page for ${documentId}`, { existingUrl });
+          return existingUrl;
         }
       }
     }
     
-    console.log(`❌ No existing page found for ${documentId}`);
+    logger.info(`No existing page found for ${documentId}`);
     return null;
     
   } catch (error) {
-    console.error('❌ Error checking existing Document ID:', error);
+    logger.error('Error checking existing Document ID', { error: error instanceof Error ? error.message : 'Unknown error' });
     return null; // If we can't check, proceed anyway
   }
 }
@@ -89,17 +85,17 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
     Date: { date: { start: note.date_iso } }, // Original date from LLM
     "Submission Date": { date: { start: submissionDate } }, // NEW: Actual submission time
     Type: { select: { name: note.type } },
-    People: { multi_select: note.people.map((p: any) => ({ name: p })) },
+    People: { multi_select: note.people.map((p: string) => ({ name: p })) },
     Source: { select: { name: note.source } },
     TLDR: { rich_text: [{ type: "text", text: { content: truncate(note.tldr) } }] },
     Summary: { rich_text: [{ type: "text", text: { content: truncate(note.summary) } }] },
     "Action Items": { rich_text: [{ type: "text", text: {
-      content: truncate(note.action_items.map((ai: any) =>
+      content: truncate(note.action_items.map((ai: { owner: string; task: string; due?: string }) =>
         `• ${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`
       ).join("\n") || "-")
     }}]},
     "Due Dates": { rich_text: [{ type: "text", text: {
-      content: truncate(note.action_items.filter((ai: any) => ai.due).map((ai: any) =>
+      content: truncate(note.action_items.filter((ai: { owner: string; task: string; due?: string }) => ai.due).map((ai: { owner: string; task: string; due?: string }) =>
         `• ${ai.owner}: ${ai.task} — ${ai.due}`
       ).join("\n") || "-")
     }}]},
@@ -127,7 +123,7 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
     props["Document ID"] = { rich_text: [{ type: "text", text: { content: documentId } }] };
   }
 
-  const blocks: any[] = [
+  const blocks: NotionBlock[] = [
     h2("TL;DR"), 
     ...parasFromText(note.tldr),
     h2("Key Takeaways")
@@ -166,12 +162,12 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
 
   const page = await notion.pages.create({
     parent: { database_id: DB_ID },
-    properties: props as any,
+    properties: props,
     children: blocks
-  });
+  }) as NotionPageCreateResult;
 
-  console.log(`📝 Created Notion page with submission date: ${submissionDate}`);
-  return { pageId: page.id, url: (page as any).url, submissionDate };
+  logger.info(`Created Notion page with submission date`, { submissionDate, pageId: page.id, url: page.url });
+  return { pageId: page.id, url: page.url, submissionDate };
 }
 
 const h2 = (text: string) => ({
@@ -214,6 +210,6 @@ export async function testSubmissionDate() {
   };
   
   const result = await createNotePage(testNote, "test-doc-id");
-  console.log('✅ Test page created:', result);
+  logger.info('Test page created', { result });
   return result;
 }

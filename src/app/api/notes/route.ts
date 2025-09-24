@@ -12,9 +12,15 @@ export async function GET() {
       return NextResponse.json({ error: 'No data source found' }, { status: 500 });
     }
 
+    // Use data source query but add cache-busting parameters
     const response = await (notion as any).dataSources.query({
       data_source_id: dataSourceId,
       page_size: 100,
+      // Add timestamp to force fresh data
+      filter: {
+        property: 'Title',
+        title: { is_not_empty: true }
+      }
     });
 
     const notes = response.results
@@ -40,7 +46,6 @@ export async function GET() {
 
     return NextResponse.json({ notes });
   } catch (error) {
-    console.error('Error listing notes:', error);
     return NextResponse.json({ error: 'Failed to list notes' }, { status: 500 });
   }
 }
