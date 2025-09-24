@@ -8,8 +8,7 @@ import {
   NotionDataSourceQueryResult,
   NotionPage,
   NotionPageCreateResult,
-  NotionBlock,
-  NotionDocumentElement
+  NotionBlock
 } from "../types/notion.types";
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN! });

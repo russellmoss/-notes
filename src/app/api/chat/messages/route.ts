@@ -6,7 +6,6 @@ import { Client } from '@notionhq/client'
 import {
   MessageRequest,
   MessageResponse,
-  ConversationRequest,
   ConversationResponse,
   NotionContextNote,
   OpenAIMessage,

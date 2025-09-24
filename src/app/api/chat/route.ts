@@ -5,7 +5,6 @@ import {
   ChatRequest,
   ChatResponse,
   NotionContextNote,
-  OpenAIMessage,
   OpenAIResponse
 } from '../../../types/chat.types'
 import { NotionDatabase, NotionDataSourceQueryResult, NotionPage } from '../../../types/notion.types'
