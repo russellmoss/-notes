@@ -68,10 +68,6 @@ export interface GoogleDocsService {
   };
 }
 
-export interface GoogleAuth {
-  // Google Auth interface - simplified for our use case
-  [key: string]: any;
-}
 
 export interface DocumentTextResult {
   text: string;

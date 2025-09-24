@@ -32,20 +32,6 @@ export default function ReviewDashboard() {
   const router = useRouter();
   const supabase = useSupabase();
 
-  useEffect(() => {
-    checkAuthAndMaybeFetch();
-  }, [checkAuthAndMaybeFetch]);
-
-  const checkAuthAndMaybeFetch = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      // Rely on middleware for protection; render friendly state client-side
-      setLoading(false);
-      return;
-    }
-    await fetchNotesForReview();
-  }, [supabase.auth, fetchNotesForReview]);
-
   const fetchNotesForReview = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -68,6 +54,20 @@ export default function ReviewDashboard() {
       setLoading(false);
     }
   }, []);
+
+  const checkAuthAndMaybeFetch = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Rely on middleware for protection; render friendly state client-side
+      setLoading(false);
+      return;
+    }
+    await fetchNotesForReview();
+  }, [supabase.auth, fetchNotesForReview]);
+
+  useEffect(() => {
+    checkAuthAndMaybeFetch();
+  }, [checkAuthAndMaybeFetch]);
 
   const toggleReviewed = (noteId: string) => {
     setNotes(prev => prev.map(note => 

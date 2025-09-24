@@ -63,9 +63,3 @@ export interface OpenAIMessage {
 export interface OpenAIResponse {
   output_text?: string;
 }
-
-export interface CookieOptions {
-  name: string;
-  value: string;
-  [key: string]: any;
-}

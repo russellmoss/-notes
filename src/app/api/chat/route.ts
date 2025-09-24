@@ -6,8 +6,8 @@ import {
   ChatResponse,
   NotionContextNote,
   OpenAIResponse
-} from '../../../types/chat.types'
-import { NotionDatabase, NotionDataSourceQueryResult, NotionPage } from '../../../types/notion.types'
+} from '@/types/chat.types'
+import { NotionDatabase, NotionDataSourceQueryResult, NotionPage } from '@/types/notion.types'
 
 function parseDateRange(params: URLSearchParams) {
   const preset = params.get('preset') // '30','60','90','custom'

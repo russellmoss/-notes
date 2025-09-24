@@ -5,14 +5,13 @@ import fs from 'fs';
 import {
   GoogleDriveService,
   GoogleDocsService,
-  GoogleAuth,
   DocumentTextResult,
   FolderAccessResult,
   GoogleDocsElement
-} from '../types/google-drive.types';
+} from '@/types/google-drive.types';
 
 // Initialize auth from service account
-function getAuth(): GoogleAuth {
+function getAuth() {
   // Check if we have environment variables for production deployment
   if (process.env.GOOGLE_CREDENTIALS) {
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);

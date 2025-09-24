@@ -9,7 +9,7 @@ import {
   NotionPage,
   NotionPageCreateResult,
   NotionBlock
-} from "../types/notion.types";
+} from "@/types/notion.types";
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN! });
 const DB_ID = process.env.NOTION_DB_ID!;
@@ -89,12 +89,12 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
     TLDR: { rich_text: [{ type: "text", text: { content: truncate(note.tldr) } }] },
     Summary: { rich_text: [{ type: "text", text: { content: truncate(note.summary) } }] },
     "Action Items": { rich_text: [{ type: "text", text: {
-      content: truncate(note.action_items.map((ai: { owner: string; task: string; due?: string }) =>
+      content: truncate(note.action_items.map((ai: { owner: string; task: string; due?: string | null }) =>
         `• ${ai.owner}: ${ai.task}${ai.due ? ` (due ${ai.due})` : ""}`
       ).join("\n") || "-")
     }}]},
     "Due Dates": { rich_text: [{ type: "text", text: {
-      content: truncate(note.action_items.filter((ai: { owner: string; task: string; due?: string }) => ai.due).map((ai: { owner: string; task: string; due?: string }) =>
+      content: truncate(note.action_items.filter((ai: { owner: string; task: string; due?: string | null }) => ai.due).map((ai: { owner: string; task: string; due?: string | null }) =>
         `• ${ai.owner}: ${ai.task} — ${ai.due}`
       ).join("\n") || "-")
     }}]},
@@ -161,8 +161,8 @@ export async function createNotePage(note: TNoteJSON, documentId?: string) {
 
   const page = await notion.pages.create({
     parent: { database_id: DB_ID },
-    properties: props,
-    children: blocks
+    properties: props as any,
+    children: blocks as any
   }) as NotionPageCreateResult;
 
   logger.info(`Created Notion page with submission date`, { submissionDate, pageId: page.id, url: page.url });
