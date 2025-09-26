@@ -9,7 +9,12 @@
     "lint": "next lint && tsc --noEmit",
     "icons": "tsx scripts/generate-icons.ts",
     "check-types": "tsc --noEmit",
-    "pre-deploy": "npm run lint && npm run check-types"
+    "pre-deploy": "npm run lint && npm run check-types",
+    "verify": "tsx scripts/verify-notion.ts",
+    "monitor": "tsx scripts/monitor-notes.ts",
+    "monitor:watch": "tsx scripts/monitor-notes.ts --watch",
+    "debug:api": "curl -s http://localhost:3000/api/debug/notion-analysis | jq",
+    "fix": "npm run check-types && npm run lint"
   },
   "dependencies": {
     "@notionhq/client": "^5.1.0",

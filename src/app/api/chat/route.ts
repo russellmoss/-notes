@@ -17,7 +17,11 @@ function parseDateRange(params: URLSearchParams) {
   const endDate = end ? new Date(end) : now
   let startDate = start ? new Date(start) : new Date(now)
 
-  if (preset && preset !== 'custom') {
+  // Default to 30 days if no preset is specified
+  if (!preset || preset === 'custom') {
+    startDate = new Date(now)
+    startDate.setDate(now.getDate() - 30) // Default to last 30 days
+  } else {
     const days = parseInt(preset, 10)
     startDate = new Date(now)
     startDate.setDate(now.getDate() - days)
