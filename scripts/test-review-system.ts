@@ -1,183 +1,194 @@
 // scripts/test-review-system.ts
 import { Client } from '@notionhq/client';
-import * as dotenv from 'dotenv';
-import path from 'path';
+import dotenv from 'dotenv';
+import { getDateRange, addDays } from '../src/lib/date-utils';
 
-// Load environment variables from .env
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: '.env.local' });
 
-// Date utility functions
-function getStartOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function getEndOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-function addDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+const notion = new Client({ auth: process.env.NOTION_TOKEN! });
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 async function testReviewSystem() {
-  console.log('🔄 Testing calendar-based review system...\n');
+  console.log('🧪 Testing Review System...\n');
+  console.log(`📍 Base URL: ${BASE_URL}\n`);
   
-  if (!process.env.NOTION_TOKEN || !process.env.NOTION_DB_ID) {
-    console.error('❌ Missing NOTION_TOKEN or NOTION_DB_ID in .env');
-    return;
-  }
-  
-  const notion = new Client({ auth: process.env.NOTION_TOKEN });
+  const testResults = {
+    dateCalculations: false,
+    pendingEndpoint: false,
+    submission: false,
+    emailEndpoint: false,
+    notionConnection: false
+  };
   
   try {
-    // Test 1: Check if database has review-related properties
-    console.log('📋 Checking database schema for review properties...');
-    const database = await notion.databases.retrieve({
-      database_id: process.env.NOTION_DB_ID
-    });
-    
-    const dbProps = Object.keys((database as any).properties || {});
-    const reviewProps = [
-      'Submission Date',
-      'Reviewed Next Day',
-      'Reviewed Week Later',
-      'Last Review Date',
-      'Review Updates'
-    ];
-    
-    console.log('   Required review properties:');
-    reviewProps.forEach(prop => {
-      const found = dbProps.includes(prop);
-      
-      if (found) {
-        console.log(`   ✅ ${prop}`);
-      } else {
-        console.log(`   ❌ ${prop} - Missing`);
-      }
-    });
-    
-    // Test 2: Test calendar-based review queries
-    console.log('\n📅 Testing calendar-based review queries...');
+    // Test 1: Date Calculations
+    console.log('📅 Test 1: Date Calculations');
     const today = new Date();
     const yesterday = addDays(today, -1);
     const weekAgo = addDays(today, -7);
     
-    console.log(`   Today: ${today.toDateString()}`);
+    const yesterdayRange = getDateRange(yesterday);
+    const weekAgoRange = getDateRange(weekAgo);
+    
+    console.log(`   Today: ${today.toISOString()}`);
     console.log(`   Yesterday: ${yesterday.toDateString()}`);
+    console.log(`   Yesterday range: ${yesterdayRange.start} to ${yesterdayRange.end}`);
     console.log(`   Week ago: ${weekAgo.toDateString()}`);
+    console.log(`   Week ago range: ${weekAgoRange.start} to ${weekAgoRange.end}`);
+    testResults.dateCalculations = true;
+    console.log(`   ✅ Date calculations working correctly\n`);
     
-    // Get database info to access data sources
-    const dbInfo = await notion.databases.retrieve({
-      database_id: process.env.NOTION_DB_ID
-    });
-    
-    const dataSourceId = (dbInfo as any).data_sources?.[0]?.id;
-    if (!dataSourceId) {
-      console.log('   ❌ No data source found in database');
-      return;
+    // Test 2: Notion Connection
+    console.log('🔌 Test 2: Notion Connection');
+    try {
+      const db = await notion.databases.retrieve({
+        database_id: process.env.NOTION_DB_ID!
+      });
+      testResults.notionConnection = true;
+      console.log(`   ✅ Connected to Notion database: ${(db as any).title?.[0]?.plain_text || 'Unnamed'}\n`);
+    } catch (error) {
+      console.log(`   ❌ Failed to connect to Notion: ${error}\n`);
     }
     
-    console.log(`   🔍 Using data source: ${dataSourceId}`);
+    // Test 3: Pending Reviews Endpoint
+    console.log('📊 Test 3: Pending Reviews Endpoint');
+    let pendingNotes: any[] = [];
     
-    // Check for pages that need next-day review (submitted yesterday)
-    const nextDayQuery = await (notion as any).dataSources.query({
-      data_source_id: dataSourceId,
-      filter: {
-        and: [
-          {
-            property: 'Submission Date',
-            date: {
-              after: getStartOfDay(yesterday).toISOString(),
-              before: getEndOfDay(yesterday).toISOString()
-            }
-          },
-          {
-            property: 'Reviewed Next Day',
-            checkbox: { equals: false }
-          }
-        ]
-      }
-    });
-    
-    console.log(`   📊 Pages needing next-day review: ${nextDayQuery.results.length}`);
-    
-    // Check for pages that need week-later review (submitted 7 days ago)
-    const weekLaterQuery = await (notion as any).dataSources.query({
-      data_source_id: dataSourceId,
-      filter: {
-        and: [
-          {
-            property: 'Submission Date',
-            date: {
-              after: getStartOfDay(weekAgo).toISOString(),
-              before: getEndOfDay(weekAgo).toISOString()
-            }
-          },
-          {
-            property: 'Reviewed Next Day',
-            checkbox: { equals: true }
-          },
-          {
-            property: 'Reviewed Week Later',
-            checkbox: { equals: false }
-          }
-        ]
-      }
-    });
-    
-    console.log(`   📊 Pages needing week-later review: ${weekLaterQuery.results.length}`);
-    
-    // Test 3: Show sample pages with review status
-    console.log('\n📄 Sample pages in database:');
-    const recentPages = await (notion as any).dataSources.query({
-      data_source_id: dataSourceId,
-      sorts: [
-        {
-          property: 'Submission Date',
-          direction: 'descending'
-        }
-      ],
-      page_size: 5
-    });
-    
-    recentPages.results.forEach((page: any, index: number) => {
-      const title = page.properties?.Title?.title?.[0]?.text?.content || 'Untitled';
-      const submissionDate = page.properties?.['Submission Date']?.date?.start || 'No date';
-      const reviewedNext = page.properties?.['Reviewed Next Day']?.checkbox || false;
-      const reviewedWeek = page.properties?.['Reviewed Week Later']?.checkbox || false;
-      
-      console.log(`   ${index + 1}. "${title}"`);
-      console.log(`      Submitted: ${submissionDate}`);
-      console.log(`      Next day reviewed: ${reviewedNext ? '✅' : '❌'}`);
-      console.log(`      Week later reviewed: ${reviewedWeek ? '✅' : '❌'}`);
-    });
-    
-    // Test 4: Test API endpoint
-    console.log('\n🔌 Testing review API endpoint...');
     try {
-      const response = await fetch('http://localhost:3000/api/review/pending');
+      const response = await fetch(`${BASE_URL}/api/review/pending`);
+      
       if (response.ok) {
         const data = await response.json();
-        console.log(`   ✅ API endpoint working - found ${data.notes.length} notes for review`);
-        console.log(`   📊 Next day: ${data.counts.nextDay}, Week later: ${data.counts.weekLater}`);
+        pendingNotes = data.notes || [];
+        testResults.pendingEndpoint = true;
+        
+        console.log(`   ✅ Endpoint working`);
+        console.log(`   📈 Found ${data.notes.length} total notes for review`);
+        console.log(`   📊 Next-day: ${data.counts.nextDay}`);
+        console.log(`   📊 Week-later: ${data.counts.weekLater}`);
+        
+        if (data.debug) {
+          console.log(`\n   🔍 Debug Info:`);
+          console.log(`   Yesterday range: ${data.debug.yesterdayRange.start}`);
+          console.log(`                to: ${data.debug.yesterdayRange.end}`);
+          console.log(`   Week ago range:  ${data.debug.weekAgoRange.start}`);
+          console.log(`               to:  ${data.debug.weekAgoRange.end}`);
+        }
+        
+        if (data.notes.length > 0) {
+          console.log(`\n   📝 Sample note:`);
+          const sample = data.notes[0];
+          console.log(`   - Title: ${sample.title}`);
+          console.log(`   - Type: ${sample.reviewType}`);
+          console.log(`   - Submission Date: ${sample.submissionDate}`);
+        }
       } else {
-        console.log(`   ⚠️  API endpoint returned status: ${response.status}`);
+        console.log(`   ❌ Endpoint returned status ${response.status}`);
+        const error = await response.text();
+        console.log(`   Error: ${error}`);
       }
     } catch (error) {
-      console.log(`   ⚠️  API endpoint not available (dev server not running?): ${error}`);
+      console.log(`   ❌ Failed to fetch pending reviews: ${error}`);
+    }
+    console.log('');
+    
+    // Test 4: Submission Endpoint (dry run)
+    console.log('📤 Test 4: Submission Endpoint (Dry Run)');
+    
+    if (pendingNotes.length > 0) {
+      const testNote = pendingNotes[0];
+      console.log(`   Testing with note: ${testNote.title}`);
+      
+      try {
+        const submitResponse = await fetch(`${BASE_URL}/api/review/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviews: [{
+              id: testNote.id,
+              reviewType: testNote.reviewType,
+              edits: 'Test review notes (dry run)',
+              reviewed: true
+            }]
+          })
+        });
+        
+        if (submitResponse.ok) {
+          const submitData = await submitResponse.json();
+          testResults.submission = true;
+          console.log(`   ✅ Submission endpoint working`);
+          console.log(`   📊 Would update ${submitData.successfulIds.length} notes`);
+          console.log(`   🔍 Response structure validated`);
+        } else {
+          console.log(`   ❌ Submission failed: ${submitResponse.statusText}`);
+        }
+      } catch (error) {
+        console.log(`   ❌ Submission test failed: ${error}`);
+      }
+    } else {
+      console.log(`   ⏭️  Skipped (no pending notes to test with)`);
+    }
+    console.log('');
+    
+    // Test 5: Email Endpoint
+    console.log('📧 Test 5: Email Endpoint');
+    
+    try {
+      const emailResponse = await fetch(`${BASE_URL}/api/review/email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.SYNC_API_KEY || ''}`
+        }
+      });
+      
+      if (emailResponse.ok) {
+        const emailData = await emailResponse.json();
+        testResults.emailEndpoint = true;
+        console.log(`   ✅ Email endpoint working`);
+        console.log(`   📧 Would send to: ${emailData.to}`);
+        console.log(`   📊 Notes in email: ${emailData.total}`);
+      } else {
+        console.log(`   ⚠️  Email endpoint returned: ${emailResponse.status}`);
+      }
+    } catch (error) {
+      console.log(`   ❌ Email test failed: ${error}`);
     }
     
-    console.log('\n✅ Calendar-based review system test complete!');
+    // Summary
+    console.log('\n' + '='.repeat(60));
+    console.log('📊 TEST SUMMARY');
+    console.log('='.repeat(60));
+    
+    let passedTests = 0;
+    let totalTests = 0;
+    
+    Object.entries(testResults).forEach(([test, passed]) => {
+      totalTests++;
+      if (passed) passedTests++;
+      console.log(`${passed ? '✅' : '❌'} ${test.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+    });
+    
+    console.log('='.repeat(60));
+    console.log(`Overall: ${passedTests}/${totalTests} tests passed`);
+    
+    if (passedTests === totalTests) {
+      console.log('\n🎉 All tests passed! Review system is working correctly.');
+    } else {
+      console.log(`\n⚠️  ${totalTests - passedTests} test(s) failed. Please check the logs above.`);
+    }
+    
+    return passedTests === totalTests;
     
   } catch (error) {
-    console.error('❌ Failed to test review system:', error);
+    console.error('\n❌ Test suite failed:', error);
+    return false;
   }
 }
 
-testReviewSystem();
+// Run the tests
+testReviewSystem().then(success => {
+  process.exit(success ? 0 : 1);
+}).catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

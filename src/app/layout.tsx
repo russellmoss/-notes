@@ -83,6 +83,29 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Theme script to prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const savedTheme = localStorage.getItem('theme');
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                  
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('theme-dark');
+                  } else {
+                    document.documentElement.classList.remove('theme-dark');
+                  }
+                } catch (e) {
+                  // Fallback to light theme if localStorage is not available
+                  document.documentElement.classList.remove('theme-dark');
+                }
+              })();
+            `,
+          }}
+        />
         {/* Additional iOS specific meta tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />

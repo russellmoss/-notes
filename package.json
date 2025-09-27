@@ -14,7 +14,12 @@
     "monitor": "tsx scripts/monitor-notes.ts",
     "monitor:watch": "tsx scripts/monitor-notes.ts --watch",
     "debug:api": "curl -s http://localhost:3000/api/debug/notion-analysis | jq",
-    "fix": "npm run check-types && npm run lint"
+    "fix": "npm run check-types && npm run lint",
+    "test:review": "tsx scripts/test-review-system.ts",
+    "test:review:watch": "tsx watch scripts/test-review-system.ts",
+    "lint:review": "eslint src/app/api/review/**/*.ts src/app/review/**/*.tsx --fix",
+    "type:check": "tsc --noEmit",
+    "dev:review": "npm run type:check && npm run dev"
   },
   "dependencies": {
     "@notionhq/client": "^5.1.0",

@@ -1,5 +1,29 @@
 // src/types/chat.types.ts
 
+// Add missing types for better consistency
+export type OpenAIRole = 'system' | 'user' | 'assistant'
+
+export interface StoredMessage {
+  id: string
+  conversation_id: string
+  role: OpenAIRole
+  content: string
+  created_at: string
+}
+
+export interface Conversation {
+  id: string
+  user_id: string
+  title: string
+  created_at: string
+  updated_at: string
+  archived_at?: string | null
+}
+
+export interface ConversationListResponse {
+  conversations: Conversation[]
+}
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -36,13 +60,7 @@ export interface ConversationRequest {
 }
 
 export interface ConversationResponse {
-  messages: Array<{
-    id: string;
-    conversation_id: string;
-    role: string;
-    content: string;
-    created_at: string;
-  }>;
+  messages: StoredMessage[];
 }
 
 export interface NotionContextNote {
@@ -56,7 +74,7 @@ export interface NotionContextNote {
 }
 
 export interface OpenAIMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: OpenAIRole;
   content: string;
 }
 
